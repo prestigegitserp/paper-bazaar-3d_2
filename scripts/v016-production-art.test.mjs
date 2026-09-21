@@ -28,15 +28,18 @@ test('world selects presentation profile independently from asset and business d
   const types = await source('../src/world/types.ts')
   const registry = await source('../src/presentation/assetPresentationRegistry.ts')
   const world = await source('../src/world/demoWorld.ts')
+  const assets = await source('../src/assets/worldAssetRegistry.ts')
 
   assert.match(types, /presentationProfileId\?: string/)
   assert.match(registry, /hero-wholesale-v1/)
   assert.match(registry, /hero-packaging-v1/)
   assert.match(registry, /hero-paper-studio-v1/)
   assert.match(registry, /getAssetPresentationProfile/)
-  assert.match(world, /models\/hero-wholesale-v1\.glb/)
-  assert.match(world, /models\/hero-packaging-v1\.glb/)
-  assert.match(world, /models\/hero-paper-studio-v1\.glb/)
+  assert.match(world, /getWorldAsset\(assetKey\)/)
+  assert.match(assets, /models\/hero-wholesale-v1\.glb/)
+  assert.match(assets, /models\/hero-packaging-v1\.glb/)
+  assert.match(assets, /models\/hero-paper-studio-v1\.glb/)
+  assert.match(assets, /defineScanAsset/)
 })
 
 test('room streaming and procedural detail budgets come from presentation profiles', async () => {
