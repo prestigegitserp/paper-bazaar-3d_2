@@ -65,7 +65,7 @@ const cylinder = (name, material, scale, translation, options = {}) =>
 const torus = (name, material, scale, translation, options = {}) =>
   part(name, material, scale, translation, { ...options, shape: 'torus' })
 
-function authoredShopNodes() {
+function authoredShopNodes(variant = 'wholesale') {
   const nodes = [
     hard('floor', 'floor', [5.5, 0.08, 7], [0, 0.04, 0]),
     hard('back_wall', 'plaster', [0.16, 4.2, 7], [-2.68, 2.1, 0]),
@@ -274,6 +274,74 @@ function authoredShopNodes() {
     ))
   }
 
+
+  if (variant === 'wholesale') {
+    for (let index = 0; index < 5; index += 1) {
+      const z = -1.9 + index * 0.88
+      nodes.push(
+        cylinder(`hero_wholesale_roll_${index}`, index % 2 ? 'paper' : 'cardboard', [0.42, 2.15, 0.42], [1.78, 1.12, z], { rotation: quat(0, 0, Math.PI / 2) }),
+        cylinder(`hero_wholesale_core_${index}`, 'cardboard', [0.12, 2.18, 0.12], [1.78, 1.12, z], { rotation: quat(0, 0, Math.PI / 2) })
+      )
+    }
+    nodes.push(
+      part('hero_wholesale_pallet', 'wood', [1.5, 0.13, 1.15], [0.2, 0.08, 2.15]),
+      part('hero_wholesale_bundle', 'paper', [1.34, 0.58, 1.0], [0.2, 0.43, 2.15]),
+      part('hero_wholesale_strap_a', 'green', [0.08, 0.62, 1.04], [0.2, 0.43, 2.15]),
+      part('hero_wholesale_strap_b', 'yellow', [1.38, 0.62, 0.08], [0.2, 0.43, 2.15])
+    )
+  }
+
+  if (variant === 'packaging') {
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 4; col += 1) {
+        nodes.push(part(
+          `hero_pack_carton_${row}_${col}`,
+          'cardboard',
+          [0.58, 0.34 + row * 0.02, 0.52],
+          [0.05 + col * 0.62, 0.20 + row * 0.37, 1.92 + (row % 2) * 0.08],
+          { rotation: quat(0, (col - 1.5) * 0.025, 0) }
+        ))
+      }
+    }
+    nodes.push(
+      part('hero_pack_cutting_table', 'wood', [1.25, 0.78, 1.5], [0.55, 0.39, -2.2]),
+      part('hero_pack_cutting_mat', 'green', [1.12, 0.025, 1.38], [0.55, 0.80, -2.2]),
+      cylinder('hero_pack_twine_a', 'cardboard', [0.18, 0.42, 0.18], [1.72, 1.02, -2.35]),
+      cylinder('hero_pack_twine_b', 'yellow', [0.16, 0.38, 0.16], [1.72, 1.02, -1.9]),
+      torus('hero_pack_tape_large', 'yellow', [0.28, 0.28, 0.14], [0.20, 0.89, -2.30], { rotation: quat(Math.PI / 2, 0, 0) })
+    )
+  }
+
+  if (variant === 'studio') {
+    for (let row = 0; row < 3; row += 1) {
+      for (let col = 0; col < 5; col += 1) {
+        const material = (row + col) % 4 === 0 ? 'yellow' : (row + col) % 3 === 0 ? 'green' : 'paper'
+        nodes.push(part(
+          `hero_studio_swatch_${row}_${col}`,
+          material,
+          [0.38, 0.48, 0.035],
+          [-2.46, 1.12 + row * 0.62, -2.4 + col * 0.96],
+          { rotation: quat(0, Math.PI / 2, (col - 2) * 0.012) }
+        ))
+      }
+    }
+    nodes.push(
+      part('hero_studio_island', 'wood', [1.45, 0.72, 1.55], [0.25, 0.36, 1.95]),
+      part('hero_studio_island_top', 'white', [1.52, 0.055, 1.62], [0.25, 0.76, 1.95]),
+      cylinder('hero_studio_stool_a', 'metal', [0.42, 0.48, 0.42], [1.55, 0.25, 1.7]),
+      cylinder('hero_studio_stool_b', 'metal', [0.42, 0.48, 0.42], [1.55, 0.25, 2.45])
+    )
+    for (let index = 0; index < 9; index += 1) {
+      nodes.push(part(
+        `hero_studio_book_${index}`,
+        index % 3 === 0 ? 'yellow' : index % 2 ? 'paper' : 'green',
+        [0.42, 0.035, 0.30],
+        [-0.2 + (index % 3) * 0.46, 0.82 + Math.floor(index / 3) * 0.045, 1.78 + Math.floor(index / 3) * 0.12],
+        { rotation: quat(0, -0.12 + (index % 3) * 0.05, 0) }
+      ))
+    }
+  }
+
   return nodes
 }
 
@@ -379,7 +447,7 @@ function serializeGeometries(geometries) {
   return { binary, bufferViews, accessors, refs }
 }
 
-export function buildAuthoredShopGlb() {
+export function buildAuthoredShopGlb(variant = 'wholesale') {
   const { binary, bufferViews, accessors, refs } = serializeGeometries(SHAPES)
   const materialIndex = new Map(MATERIALS.map(([name], index) => [name, index]))
   const materials = MATERIALS.map(([name, color, metallicFactor, roughnessFactor]) => ({
@@ -415,7 +483,7 @@ export function buildAuthoredShopGlb() {
     }
   }
 
-  const nodeSpecs = authoredShopNodes()
+  const nodeSpecs = authoredShopNodes(variant)
   const nodes = nodeSpecs.map((node) => ({
     name: node.name,
     mesh: meshIndex.get(`${node.shape}:${node.material}`),
@@ -428,10 +496,10 @@ export function buildAuthoredShopGlb() {
   const gltf = {
     asset: {
       version: '2.0',
-      generator: 'Paper Bazaar authored-shop generator v0.15'
+      generator: 'Paper Bazaar production hero generator v0.16'
     },
     scene: 0,
-    scenes: [{ name: 'Iran Paper Authored Store v4', nodes: nodes.map((_, index) => index) }],
+    scenes: [{ name: `Paper Bazaar Hero ${variant} v1`, nodes: nodes.map((_, index) => index) }],
     nodes,
     meshes,
     materials,
@@ -476,11 +544,24 @@ export function inspectAuthoredShopGlb(buffer) {
 
 async function main() {
   const here = dirname(fileURLToPath(import.meta.url))
-  const target = resolve(here, '../public/models/iran-paper-authored-v4.glb')
-  await mkdir(dirname(target), { recursive: true })
-  const buffer = buildAuthoredShopGlb()
-  await writeFile(target, buffer)
-  process.stdout.write(`Generated ${target} (${buffer.length} bytes)\n`)
+  const modelDir = resolve(here, '../public/models')
+  await mkdir(modelDir, { recursive: true })
+
+  const variants = [
+    ['wholesale', 'hero-wholesale-v1.glb'],
+    ['packaging', 'hero-packaging-v1.glb'],
+    ['studio', 'hero-paper-studio-v1.glb']
+  ]
+
+  for (const [variant, filename] of variants) {
+    const target = resolve(modelDir, filename)
+    const buffer = buildAuthoredShopGlb(variant)
+    await writeFile(target, buffer)
+    process.stdout.write(`Generated ${target} (${buffer.length} bytes)\n`)
+  }
+
+  // Keep the v0.15 asset filename as a build-time compatibility artifact.
+  await writeFile(resolve(modelDir, 'iran-paper-authored-v4.glb'), buildAuthoredShopGlb('wholesale'))
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
