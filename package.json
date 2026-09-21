@@ -1,7 +1,7 @@
 {
   "name": "paper-bazaar-3d",
   "private": true,
-  "version": "0.15.0",
+  "version": "0.16.0",
   "type": "module",
   "scripts": {
     "dev": "concurrently -k \"npm:dev:web\" \"npm:dev:api\"",
@@ -15,8 +15,10 @@
     "refresh:prices": "node server/scrape.mjs",
     "typecheck": "tsc -b --pretty false",
     "generate:authored-shop": "node scripts/generate-authored-shop.mjs",
-    "predev:web": "node scripts/generate-authored-shop.mjs",
-    "prebuild": "node scripts/generate-authored-shop.mjs"
+    "predev:web": "npm run generate:production-atlas && npm run prepare:production-textures && npm run generate:authored-shop",
+    "prebuild": "npm run generate:production-atlas && npm run prepare:production-textures && npm run generate:authored-shop",
+    "generate:production-atlas": "node scripts/generate-production-atlas.mjs",
+    "prepare:production-textures": "node scripts/prepare-production-textures.mjs"
   },
   "dependencies": {
     "@react-three/drei": "10.7.6",
@@ -36,7 +38,8 @@
     "@vitejs/plugin-react": "5.0.2",
     "concurrently": "9.2.1",
     "typescript": "5.9.2",
-    "vite": "7.1.5"
+    "vite": "7.1.5",
+    "pngjs": "7.0.0"
   },
   "engines": {
     "node": ">=20.19.0"
