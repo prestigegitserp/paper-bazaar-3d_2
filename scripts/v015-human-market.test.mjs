@@ -9,8 +9,11 @@ async function source(relative) {
 test('v0.15 re-hibernates file-backed rooms without evicting the prefetched asset', async () => {
   const renderer = await source('../src/components/RoomRenderer.tsx')
 
-  assert.match(renderer, /FILE_REVEAL_RADIUS = 18/)
-  assert.match(renderer, /FILE_SLEEP_RADIUS = 22/)
+  const presentation = await source('../src/presentation/assetPresentationRegistry.ts')
+  assert.match(renderer, /lod\.revealRadius/)
+  assert.match(renderer, /lod\.sleepRadius/)
+  assert.match(presentation, /revealRadius: 18/)
+  assert.match(presentation, /sleepRadius: 22/)
   assert.match(renderer, /setVisible\(false\)/)
   assert.match(renderer, /fileState\.ready && fileState\.visible/)
   assert.match(renderer, /!fileReady \|\| !fileVisible/)
@@ -21,11 +24,12 @@ test('v0.15 re-hibernates file-backed rooms without evicting the prefetched asse
 test('procedural detail budget is view-aware while preserving v0.14 distance hysteresis', async () => {
   const renderer = await source('../src/components/RoomRenderer.tsx')
 
-  assert.match(renderer, /PROCEDURAL_WAKE_RADIUS = 11\.5/)
-  assert.match(renderer, /PROCEDURAL_SLEEP_RADIUS = 15\.5/)
-  assert.match(renderer, /PROCEDURAL_FORCE_RADIUS = 6\.8/)
-  assert.match(renderer, /PROCEDURAL_WAKE_VIEW_DOT/)
-  assert.match(renderer, /PROCEDURAL_SLEEP_VIEW_DOT/)
+  const presentation = await source('../src/presentation/assetPresentationRegistry.ts')
+  assert.match(presentation, /proceduralWakeRadius: 11\.5/)
+  assert.match(presentation, /proceduralSleepRadius: 15\.5/)
+  assert.match(presentation, /forceDetailRadius: 6\.8/)
+  assert.match(renderer, /lod\.viewWakeDot/)
+  assert.match(renderer, /lod\.viewSleepDot/)
   assert.match(renderer, /viewDot/)
   assert.match(renderer, /behindProbes/)
 })
@@ -93,10 +97,10 @@ test('authored hero shop v4 adds work props and stays local to the file renderer
   assert.match(generator, /hero_scale_base/)
   assert.match(generator, /hero_handtruck_wheel_a/)
   assert.match(generator, /hero_sample_book_/)
-  assert.match(generator, /iran-paper-authored-v4\.glb/)
-  assert.match(world, /authored:iran-paper-net:store:v4/)
-  assert.match(fileRenderer, /<spotLight/)
-  assert.match(fileRenderer, /castShadow=\{false\}/)
+  assert.match(generator, /hero-wholesale-v1\.glb/)
+  assert.match(world, /authored:hero-wholesale:v1/)
+  assert.match(fileRenderer, /HeroRoomArtDirection/)
+  assert.match(fileRenderer, /presentation\.shadow/)
 })
 
 test('dormant storefront text uses a reduced texture budget', async () => {
