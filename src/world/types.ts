@@ -59,6 +59,7 @@ export type RoomCollider =
 
 export type RoomExperienceConfig = {
   profileId: string
+  presentationProfileId?: string
   catalogDocumentId?: string
 }
 
