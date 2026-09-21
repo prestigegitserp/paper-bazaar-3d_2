@@ -9,12 +9,13 @@ async function source(relative) {
 test('procedural rooms hibernate behind lightweight storefront proxies', async () => {
   const renderer = await source('../src/components/RoomRenderer.tsx')
   const proxy = await source('../src/components/ProceduralRoomProxy.tsx')
+  const presentation = await source('../src/presentation/assetPresentationRegistry.ts')
 
-  assert.match(renderer, /PROCEDURAL_WAKE_RADIUS = 11\.5/)
-  assert.match(renderer, /PROCEDURAL_SLEEP_RADIUS = 15\.5/)
+  assert.match(presentation, /proceduralWakeRadius: 11\.5/)
+  assert.match(presentation, /proceduralSleepRadius: 15\.5/)
   assert.match(renderer, /ProceduralRoomProxy/)
-  assert.match(renderer, /distanceSq <= PROCEDURAL_WAKE_RADIUS_SQ/)
-  assert.match(renderer, /distanceSq >= PROCEDURAL_SLEEP_RADIUS_SQ/)
+  assert.match(renderer, /distanceSq <= wakeRadiusSq/)
+  assert.match(renderer, /distanceSq >= sleepRadiusSq/)
   assert.match(renderer, /state\.activeRoomId === room\.id/)
   assert.match(proxy, /WorldTextPanel/)
   assert.doesNotMatch(proxy, /StockWall|ProductPaperStack|LivedInDetails/)
