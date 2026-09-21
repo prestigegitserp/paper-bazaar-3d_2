@@ -33,7 +33,6 @@ import {
 } from '../scene/materials/microDetailTextures'
 import { preferredPbrResolution } from '../scene/materials/textureQuality'
 import { warmPbrTextureSet } from '../scene/materials/textureUploadScheduler'
-import { getProductionAtlasTile, loadProductionMaterialAtlas } from '../scene/materials/productionAtlas'
 import { useAppStore, type RenderQuality } from '../store'
 import { resolveHotspotInteraction } from '../world/hotspots'
 import type { RoomDefinition } from '../world/types'
@@ -348,7 +347,11 @@ const atlasMaterialTiles: Partial<Record<string, number>> = {
   white: 0
 }
 
-function applyProductionAtlasMaterials(scene: Object3D, atlas: import('three').Texture) {
+function applyProductionAtlasMaterials(
+  scene: Object3D,
+  atlas: import('three').Texture,
+  getTile: (source: import('three').Texture, tile: number) => import('three').Texture
+) {
   scene.traverse((object) => {
     if (!(object instanceof Mesh)) return
     const materials = Array.isArray(object.material) ? object.material : [object.material]
@@ -358,7 +361,7 @@ function applyProductionAtlasMaterials(scene: Object3D, atlas: import('three').T
       const tile = atlasMaterialTiles[material.name]
       if (tile === undefined) continue
 
-      material.map = getProductionAtlasTile(atlas, tile)
+      material.map = getTile(atlas, tile)
       material.color.set('#ffffff')
       material.needsUpdate = true
     }
@@ -404,10 +407,11 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
     if (!authored) return
 
     let active = true
-    void loadProductionMaterialAtlas(gl)
-      .then((atlas) => {
+    void import('../scene/materials/productionAtlas')
+      .then(async ({ loadProductionMaterialAtlas, getProductionAtlasTile }) => {
+        const atlas = await loadProductionMaterialAtlas(gl)
         if (!active) return
-        applyProductionAtlasMaterials(scene, atlas)
+        applyProductionAtlasMaterials(scene, atlas, getProductionAtlasTile)
         invalidate()
       })
       .catch(() => {
