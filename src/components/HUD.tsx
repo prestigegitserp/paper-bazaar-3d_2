@@ -505,7 +505,7 @@ export default function HUD() {
       <div className="topbar">
         <div className="brand-lockup">
           <div className="brand-mark">P3</div>
-          <div><strong>Paper Bazaar 3D</strong><span>Human market runtime · v0.15</span></div>
+          <div><strong>Paper Bazaar 3D</strong><span>Production market · v0.16</span></div>
         </div>
 
         <div className="top-actions">
@@ -589,15 +589,15 @@ export default function HUD() {
       {!started && (
         <div className="intro-overlay">
           <div className="intro-card">
-            <div className="intro-eyebrow">HUMAN MARKET RUNTIME · v0.15.0</div>
+            <div className="intro-eyebrow">PRODUCTION ART PASS · v0.16.0</div>
             <h1>راسته‌ی سه‌بعدی<br /><span>کاغذفروشان بازار تهران</span></h1>
-            <p>v0.15 روی تمام تجربه‌های v0.14 ساخته شده: GLB و غرفه‌های پشت سر دوباره hibernate می‌شوند، شیشه‌های تزئینی از مسیر transmission گران خارج شده‌اند، raycast با حرکت واقعی دوربین زمان‌بندی می‌شود و hero shop authored v4 جزئیات کاری بیشتری دارد. تعامل هم از «بازکردن پنل» فراتر رفته: نمونه سریع، سبد استعلام چندفروشنده، مقایسه و راهنمای غرفه بعدی.</p>
+            <p>v0.16 یک بازسازی هنری/فنی است: سه Hero Shop متفاوت با چیدمان عمده‌فروشی، بسته‌بندی و استودیوی نمونه؛ متریال‌اتلس فشرده، نورپردازی موضعی، wear و signage مستقل، و streaming profile-driven. معماری جدید اجازه می‌دهد بعداً GLB، اسکن LiDAR/photogrammetry، تعداد غرفه یا حتی کل texture set بدون تغییر business layer جایگزین شود.</p>
             <div className="intro-features">
-              <span>View-aware room hibernation</span>
-              <span>File GLB re-hibernation</span>
-              <span>Authored hero shop v4</span>
-              <span>Quick sample / quote actions</span>
-              <span>Multi-vendor quote comparison</span>
+              <span>3 distinct Hero Shops</span>
+              <span>KTX2 material atlas</span>
+              <span>Production light profiles</span>
+              <span>Scan-ready asset registry</span>
+              <span>v0.15 interaction runtime preserved</span>
             </div>
             <button className="enter-button" onClick={enter}>ورود به بازار <b>↵</b></button>
             <small>دسکتاپ: WASD + Mouse + Wheel · موبایل: Joystick + Look pad + Pinch/±.</small>
