@@ -16,13 +16,13 @@ import type { Vendor } from '../domain/catalog'
 import type { Interaction } from '../domain/interaction'
 import { interactionFromObject } from '../engine/interactions'
 import { resolveAssetUrl } from '../assets/resolveAssetUrl'
+import { getAssetPresentationProfile, type AssetPresentationProfile } from '../presentation/assetPresentationRegistry'
 import {
   acquirePbrTextureSet,
   releasePbrTextureSet,
   type PbrTextureLease,
   type PbrTextureSet
 } from '../scene/materials/pbrTextureCache'
-import type { SurfacePresetId } from '../world/boothProfiles'
 import {
   getMicroAlbedoVariant,
   getMicroBumpScale,
@@ -37,20 +37,11 @@ import { useAppStore, type RenderQuality } from '../store'
 import { resolveHotspotInteraction } from '../world/hotspots'
 import type { RoomDefinition } from '../world/types'
 import AuthoredSurfaceDetails from './AuthoredSurfaceDetails'
+import HeroRoomArtDirection from './HeroRoomArtDirection'
 import { ProductSampleRail } from '../scene/retail/RetailFixtures'
 import WorldTextPanel from './WorldTextPanel'
 
-const authoredTextureBindings: Partial<Record<string, {
-  surface: SurfacePresetId
-  repeat: [number, number]
-  normalScale: number
-}>> = {
-  floor: { surface: 'mall-porcelain', repeat: [2.6, 4.2], normalScale: 0.24 },
-  plaster: { surface: 'mall-plaster', repeat: [3.2, 4.2], normalScale: 0.2 },
-  wood: { surface: 'bazaar-plywood', repeat: [2.2, 2.2], normalScale: 0.22 }
-}
-
-const tinyDecorativeBatch = /^(calculator_key_|bundle_strap_|shelf_front_lip_|hvac_slot_|carton_tape_|paper_label_|counter_ticket_clip_)/
+const tinyDecorativeBatch = /^(calculator_key_|bundle_strap_|shelf_front_lip_|hvac_slot_|carton_tape_|paper_label_|counter_ticket_clip_|hero_.*(?:book|tape|stamp|twine))/
 
 
 export function preloadFileRoom(url: string) {
@@ -122,7 +113,8 @@ function applyAuthoredMicroDetail(
 function upgradeAuthoredMaterial(
   material: Material,
   quality: RenderQuality,
-  detailAnisotropy: number
+  detailAnisotropy: number,
+  environmentIntensity: number
 ) {
   if (!(material instanceof MeshStandardMaterial)) return material.clone()
 
@@ -195,6 +187,7 @@ function upgradeAuthoredMaterial(
       physical.clearcoat = quality === 'cinematic' ? 0.045 : 0
   }
 
+  physical.envMapIntensity *= environmentIntensity
   applyAuthoredMicroDetail(physical, material.name, detailAnisotropy)
   return physical
 }
@@ -204,13 +197,19 @@ function attachNodeInteractions(
   room: RoomDefinition,
   quality: RenderQuality,
   detailAnisotropy: number,
+  presentation: AssetPresentationProfile,
   vendor?: Vendor
 ) {
   const materialCache = new Map<Material, Material>()
   const upgraded = (material: Material) => {
     const cached = materialCache.get(material)
     if (cached) return cached
-    const next = upgradeAuthoredMaterial(material, quality, detailAnisotropy)
+    const next = upgradeAuthoredMaterial(
+      material,
+      quality,
+      detailAnisotropy,
+      presentation.hero?.environmentIntensity ?? 1
+    )
     materialCache.set(material, next)
     return next
   }
@@ -220,7 +219,11 @@ function attachNodeInteractions(
     delete object.userData.interaction
 
     if (object instanceof Mesh) {
-      object.castShadow = true
+      const sourceMaterials = Array.isArray(object.material) ? object.material : [object.material]
+      const transparent = sourceMaterials.some((material) => material.transparent)
+      const tinyDecoration = tinyDecorativeBatch.test(object.name)
+      object.castShadow = (!transparent || presentation.shadow.transparentCast)
+        && (!tinyDecoration || presentation.shadow.tinyDecorationsCast)
       object.receiveShadow = true
       object.material = Array.isArray(object.material)
         ? object.material.map(upgraded)
@@ -306,14 +309,18 @@ function batchStaticAuthoredMeshes(scene: Object3D) {
   scene.updateMatrixWorld(true)
 }
 
-function applyAuthoredTextureSets(scene: Object3D, sets: Map<string, PbrTextureSet>) {
+function applyAuthoredTextureSets(
+  scene: Object3D,
+  sets: Map<string, PbrTextureSet>,
+  bindings: AssetPresentationProfile['materialBindings']
+) {
   scene.traverse((object) => {
     if (!(object instanceof Mesh)) return
 
     const materials = Array.isArray(object.material) ? object.material : [object.material]
     for (const material of materials) {
       if (!(material instanceof MeshStandardMaterial)) continue
-      const binding = authoredTextureBindings[material.name]
+      const binding = bindings[material.name]
       const set = sets.get(material.name)
       if (!binding || !set) continue
 
@@ -348,18 +355,19 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
   const setSelected = useAppStore((state) => state.setSelected)
   const setNearby = useAppStore((state) => state.setNearby)
   const quality = useAppStore((state) => state.quality)
+  const presentation = getAssetPresentationProfile(room)
   const detailAnisotropy = quality === 'cinematic'
     ? Math.min(8, gl.capabilities.getMaxAnisotropy())
     : Math.min(4, gl.capabilities.getMaxAnisotropy())
 
   const scene = useMemo(() => {
     const clone = gltf.scene.clone(true)
-    attachNodeInteractions(clone, room, quality, detailAnisotropy, vendor)
+    attachNodeInteractions(clone, room, quality, detailAnisotropy, presentation, vendor)
     if (room.asset.kind === 'gltf' && room.asset.source === 'authored') {
       batchStaticAuthoredMeshes(clone)
     }
     return clone
-  }, [detailAnisotropy, gltf.scene, quality, room, vendor])
+  }, [detailAnisotropy, gltf.scene, presentation, quality, room, vendor])
 
   useEffect(() => {
     const authored = room.asset.kind === 'gltf' && room.asset.source === 'authored'
@@ -370,7 +378,7 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
     const sets = new Map<string, PbrTextureSet>()
     const resolution = preferredPbrResolution(quality, true)
 
-    const tasks = Object.entries(authoredTextureBindings).map(async ([materialName, binding]) => {
+    const tasks = Object.entries(presentation.materialBindings).map(async ([materialName, binding]) => {
       if (!binding) return
       const lease = await acquirePbrTextureSet(binding.surface, {
         repeat: binding.repeat,
@@ -405,7 +413,7 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
     void Promise.all(tasks)
       .then(() => {
         if (active) {
-          applyAuthoredTextureSets(scene, sets)
+          applyAuthoredTextureSets(scene, sets, presentation.materialBindings)
           invalidate()
         }
       })
@@ -418,7 +426,7 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
       for (const lease of leases.splice(0)) releasePbrTextureSet(lease)
       sets.clear()
     }
-  }, [detailAnisotropy, gl, invalidate, quality, room.asset, scene])
+  }, [detailAnisotropy, gl, invalidate, presentation, quality, room.asset, scene])
 
   useEffect(() => {
     if (quality !== 'cinematic') return
@@ -458,17 +466,7 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
         )}
 
         {room.asset.kind === 'gltf' && room.asset.source === 'authored' && (
-          <spotLight
-            position={[0.55, 3.72, -0.65]}
-            target-position={[0.82, 0.95, -0.8]}
-            color="#ffe6bf"
-            intensity={7.5}
-            distance={6}
-            angle={0.72}
-            penumbra={0.9}
-            decay={2}
-            castShadow={false}
-          />
+          <HeroRoomArtDirection room={room} />
         )}
 
         {vendor && room.asset.kind === 'gltf' && room.asset.source === 'authored' && (
