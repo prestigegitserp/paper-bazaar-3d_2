@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Vector3 } from 'three'
 import type { Vendor } from '../domain/catalog'
 import { clearRoomRuntimeMode, setRoomRuntimeMode, type RoomRuntimeMode } from '../engine/runtimeMetrics'
+import { getAssetPresentationProfile } from '../presentation/assetPresentationRegistry'
 import { useAppStore } from '../store'
 import type { RoomDefinition } from '../world/types'
 import Booth from './Booth'
@@ -10,21 +11,6 @@ import ProceduralRoomProxy from './ProceduralRoomProxy'
 import RoomAssetBoundary from './RoomAssetBoundary'
 import WorldTextPanel from './WorldTextPanel'
 
-const FILE_PREFETCH_RADIUS = 24
-const FILE_REVEAL_RADIUS = 18
-const FILE_SLEEP_RADIUS = 22
-const FILE_PREFETCH_RADIUS_SQ = FILE_PREFETCH_RADIUS * FILE_PREFETCH_RADIUS
-const FILE_REVEAL_RADIUS_SQ = FILE_REVEAL_RADIUS * FILE_REVEAL_RADIUS
-const FILE_SLEEP_RADIUS_SQ = FILE_SLEEP_RADIUS * FILE_SLEEP_RADIUS
-
-const PROCEDURAL_FORCE_RADIUS = 6.8
-const PROCEDURAL_WAKE_RADIUS = 11.5
-const PROCEDURAL_SLEEP_RADIUS = 15.5
-const PROCEDURAL_FORCE_RADIUS_SQ = PROCEDURAL_FORCE_RADIUS * PROCEDURAL_FORCE_RADIUS
-const PROCEDURAL_WAKE_RADIUS_SQ = PROCEDURAL_WAKE_RADIUS * PROCEDURAL_WAKE_RADIUS
-const PROCEDURAL_SLEEP_RADIUS_SQ = PROCEDURAL_SLEEP_RADIUS * PROCEDURAL_SLEEP_RADIUS
-const PROCEDURAL_WAKE_VIEW_DOT = -0.18
-const PROCEDURAL_SLEEP_VIEW_DOT = -0.72
 const PROCEDURAL_BEHIND_PROBES = 4
 
 let fileRoomModulePromise: Promise<typeof import('./FileRoomRenderer')> | null = null
@@ -44,6 +30,7 @@ function fileAssetUrl(room: RoomDefinition) {
 
 function useProceduralDetail(room: RoomDefinition) {
   const started = useAppStore((state) => state.started)
+  const lod = getAssetPresentationProfile(room).lod
   const camera = useThree((state) => state.camera)
   const [detailed, setDetailed] = useState(false)
   const frame = useRef(0)
@@ -79,6 +66,9 @@ function useProceduralDetail(room: RoomDefinition) {
     const dx = state.player.x - room.position[0]
     const dz = state.player.z - room.position[2]
     const distanceSq = dx * dx + dz * dz
+    const forceRadiusSq = lod.forceDetailRadius * lod.forceDetailRadius
+    const wakeRadiusSq = lod.revealRadius * lod.revealRadius
+    const sleepRadiusSq = lod.sleepRadius * lod.sleepRadius
 
     toRoom.current.set(room.position[0] - camera.position.x, 0, room.position[2] - camera.position.z)
     const toRoomLengthSq = toRoom.current.lengthSq()
@@ -88,8 +78,8 @@ function useProceduralDetail(room: RoomDefinition) {
 
     if (!detailed) {
       if (
-        distanceSq <= PROCEDURAL_FORCE_RADIUS_SQ
-        || (distanceSq <= PROCEDURAL_WAKE_RADIUS_SQ && viewDot >= PROCEDURAL_WAKE_VIEW_DOT)
+        distanceSq <= forceRadiusSq
+        || (distanceSq <= wakeRadiusSq && viewDot >= lod.viewWakeDot)
       ) {
         behindProbes.current = 0
         setDetailed(true)
@@ -97,13 +87,13 @@ function useProceduralDetail(room: RoomDefinition) {
       return
     }
 
-    if (distanceSq >= PROCEDURAL_SLEEP_RADIUS_SQ) {
+    if (distanceSq >= sleepRadiusSq) {
       behindProbes.current = 0
       setDetailed(false)
       return
     }
 
-    if (distanceSq > PROCEDURAL_FORCE_RADIUS_SQ && viewDot <= PROCEDURAL_SLEEP_VIEW_DOT) {
+    if (distanceSq > forceRadiusSq && viewDot <= lod.viewSleepDot) {
       behindProbes.current += 1
       if (behindProbes.current >= PROCEDURAL_BEHIND_PROBES) {
         behindProbes.current = 0
@@ -120,6 +110,7 @@ function useProceduralDetail(room: RoomDefinition) {
 
 function useProgressiveFileAsset(room: RoomDefinition) {
   const started = useAppStore((state) => state.started)
+  const lod = getAssetPresentationProfile(room).lod
   const url = fileAssetUrl(room)
   const [ready, setReady] = useState(() => !url)
   const [visible, setVisible] = useState(false)
@@ -148,6 +139,9 @@ function useProgressiveFileAsset(room: RoomDefinition) {
     const dx = state.player.x - room.position[0]
     const dz = state.player.z - room.position[2]
     const distanceSq = dx * dx + dz * dz
+    const prefetchRadiusSq = lod.prefetchRadius * lod.prefetchRadius
+    const revealRadiusSq = lod.revealRadius * lod.revealRadius
+    const sleepRadiusSq = lod.sleepRadius * lod.sleepRadius
 
     const preload = () => {
       if (prefetchStarted.current) return
@@ -162,16 +156,16 @@ function useProgressiveFileAsset(room: RoomDefinition) {
       return
     }
 
-    if (distanceSq <= FILE_PREFETCH_RADIUS_SQ) preload()
+    if (distanceSq <= prefetchRadiusSq) preload()
 
-    if (distanceSq <= FILE_REVEAL_RADIUS_SQ) {
+    if (distanceSq <= revealRadiusSq) {
       preload()
       if (!ready) setReady(true)
       if (!visible) setVisible(true)
       return
     }
 
-    if (visible && distanceSq >= FILE_SLEEP_RADIUS_SQ) {
+    if (visible && distanceSq >= sleepRadiusSq) {
       setVisible(false)
     }
   })
