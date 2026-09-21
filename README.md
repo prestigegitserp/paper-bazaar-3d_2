@@ -1,6 +1,6 @@
 # Paper Bazaar 3D
 
-نسخه فعلی: **v0.15.0**
+نسخه فعلی: **v0.16.0**
 
 یک prototype سه‌بعدی ماژولار برای بازار کاغذ ایران با React، TypeScript، Three.js و React Three Fiber. v0.15 مستقیماً روی snapshot پایدار v0.14 ساخته شده است: runtime سبک‌تر، hero shop authored v4 و تعامل‌هایی که بدون شکستن flow حرکت اجازه‌ی نمونه‌برداری، استعلام چندفروشنده و مقایسه می‌دهند. قراردادهای World/Catalog/Documents/Scan و تمام releaseهای قبلی حفظ شده‌اند.
 
@@ -29,6 +29,38 @@ npm run dev
 | Mobile look | drag در نیمه راست |
 | Mobile interact | E |
 | Mobile zoom | pinch یا +/- |
+
+## v0.16 — Production Art + Portable Asset Runtime
+
+از v0.16 توسعه فقط در repository جدید `prestigegitserp/paper-bazaar-3d_2` ادامه پیدا می‌کند. repository قبلی frozen است و `release/v0.15.0` در این repo نقطه‌ی مهاجرت/rollback قبل از جراحی ساختاری است.
+
+### جهش بصری
+- سه Hero Shop مستقل: عمده‌فروشی رول و بندل، بسته‌بندی/کارتن، و استودیوی sample/fine-paper.
+- هر Hero Shop geometry و prop dressing متفاوت دارد، اما semantic hotspot contract یکسان است.
+- palette کل تجربه از cyber-blue به بازار گرم، کاغذی و صنعتی تغییر کرده است.
+- نورپردازی هر Hero Shop profile مستقل key/fill/rim دارد و فقط هنگام residency همان room mount می‌شود.
+- wear، labels و atlas dressing مستقل از business data و مستقل از topology هستند.
+
+### Atlas / KTX2
+- build یک material atlas مشترک 1024×1024 با 16 tile تولید می‌کند.
+- CI با KTX-Software 4.4.2 atlas را به KTX2/ETC1S + mipmaps تبدیل می‌کند.
+- runtime از KTX2Loader و Basis transcoder استفاده می‌کند و برای local/offline fallback PNG دارد.
+- materialهای paper/cardboard/paint/silver/labels از tileهای مشترک atlas استفاده می‌کنند تا texture residency انفجاری نشود.
+
+### معماری قابل‌تعویض
+- `RoomDefinition` فقط asset + `presentationProfileId` را انتخاب می‌کند.
+- `assetPresentationRegistry` LOD، material binding، shadow policy، lighting و dressing را تعریف می‌کند.
+- افزودن GLB/scan جدید نیازمند fork کردن RoomRenderer نیست.
+- scanهای GLTF از همان residency و interaction path عبور می‌کنند؛ topology و business data همچنان جدا هستند.
+- texture set، lighting profile یا حتی کل asset یک غرفه می‌تواند مستقل تعویض شود.
+
+### Performance
+- file/scan residency با profile کنترل می‌شود؛ heroها می‌توانند prefetch بزرگ‌تر داشته باشند بدون سنگین‌کردن غرفه‌های procedural.
+- v0.15 procedural wake/sleep یعنی 11.5m/15.5m حفظ شده است.
+- tiny props و transparent props در Hero Shop به‌صورت پیش‌فرض shadow caster نیستند.
+- repeated authored meshes همچنان در runtime batch می‌شوند.
+- KTX2 و atlas برای کاهش texture bandwidth/residency به pipeline اضافه شده‌اند.
+- Hero lighting هیچ shadow map اضافی تولید نمی‌کند.
 
 ## v0.15 — Human Market Runtime
 
@@ -193,3 +225,10 @@ asset: {
 - [docs/DEBUGGING.md](docs/DEBUGGING.md)
 - [docs/MOBILE.md](docs/MOBILE.md)
 - [CHANGELOG.md](CHANGELOG.md)
+
+
+## Repository migration
+
+- Legacy / frozen: `prestigegitserp/paper-bazaar-3d`
+- Active v0.16+: `prestigegitserp/paper-bazaar-3d_2`
+- Migrated baseline: `release/v0.15.0`
