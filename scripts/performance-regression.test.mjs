@@ -29,8 +29,10 @@ test('intro rendering defers expensive continuous and shadow work', async () => 
 test('file-backed rooms use distance prefetch and local Suspense fallback', async () => {
   const renderer = await source('../src/components/RoomRenderer.tsx')
   const fileRenderer = await source('../src/components/FileRoomRenderer.tsx')
-  assert.match(renderer, /FILE_PREFETCH_RADIUS = 24/)
-  assert.match(renderer, /FILE_REVEAL_RADIUS = 18/)
+  const presentation = await source('../src/presentation/assetPresentationRegistry.ts')
+  assert.match(renderer, /getAssetPresentationProfile\(room\)\.lod/)
+  assert.match(presentation, /prefetchRadius: 24/)
+  assert.match(presentation, /revealRadius: 18/)
   assert.match(renderer, /import\('\.\/FileRoomRenderer'\)/)
   assert.match(renderer, /preloadFileRoom/)
   assert.match(fileRenderer, /useGLTF\.preload/)
@@ -65,8 +67,8 @@ test('v0.12 keeps the v0.11 authored asset and realism pipeline intact', async (
   const generator = await source('./generate-authored-shop.mjs')
   const material = await source('../src/scene/materials/SurfaceMaterial.tsx')
 
-  assert.match(world, /iran-paper-authored-v4\.glb/)
-  assert.match(world, /authored:iran-paper-net:store:v4/)
+  assert.match(world, /hero-wholesale-v1\.glb/)
+  assert.match(world, /authored:hero-wholesale:v1/)
   assert.match(generator, /TEXCOORD_0/)
   assert.match(generator, /RoundedBoxGeometry/)
   assert.match(material, /meshPhysicalMaterial/)
