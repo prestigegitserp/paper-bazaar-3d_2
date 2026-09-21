@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'release/**'
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install KTX Software 4.4.2
+        shell: bash
+        run: |
+          curl -fL --retry 3 \
+            https://github.com/KhronosGroup/KTX-Software/releases/download/v4.4.2/KTX-Software-4.4.2-Linux-x86_64.tar.bz2 \
+            -o /tmp/ktx.tar.bz2
+          mkdir -p /tmp/ktx
+          tar -xjf /tmp/ktx.tar.bz2 -C /tmp/ktx
+          KTX_BIN="$(find /tmp/ktx -type f -name toktx -perm -111 | head -n 1)"
+          test -n "$KTX_BIN"
+          KTX_ROOT="$(dirname "$(dirname "$KTX_BIN")")"
+          echo "$(dirname "$KTX_BIN")" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$KTX_ROOT/lib:$KTX_ROOT/lib64:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+          "$KTX_BIN" --version
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run regression suite
+        run: npm test
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Verify production assets
+        shell: bash
+        run: |
+          test -s public/models/hero-wholesale-v1.glb
+          test -s public/models/hero-packaging-v1.glb
+          test -s public/models/hero-paper-studio-v1.glb
+          test -s public/textures/production/market-material-atlas.png
+          test -s public/textures/production/market-material-atlas.ktx2
+          grep -q '"compressed": true' public/textures/production/runtime-textures.json
+          test -s public/basis/basis_transcoder.wasm
