@@ -1,3 +1,4 @@
+import { getWorldAsset, type WorldAssetKey } from '../assets/worldAssetRegistry'
 import { bazaarShopColliders, bazaarShopEntryAnchor, bazaarShopFootprint } from './presets/bazaarShop'
 import type { BoothTheme, HotspotDefinition, RoomDefinition, WorldDefinition } from './types'
 
@@ -115,8 +116,7 @@ function authoredShop(
   themeKey: string,
   profileId: string,
   presentationProfileId: string,
-  assetId: string,
-  url: string,
+  assetKey: WorldAssetKey,
   x: number,
   z: number,
   rotationY: number,
@@ -125,14 +125,7 @@ function authoredShop(
   const base = shop(id, label, themeKey, profileId, x, z, rotationY, vendorId)
   return {
     ...base,
-    asset: {
-      kind: 'gltf',
-      url,
-      assetId,
-      version: '1.0.0',
-      metersPerUnit: 1,
-      source: 'authored'
-    },
+    asset: getWorldAsset(assetKey),
     experience: {
       ...base.experience,
       profileId,
@@ -156,8 +149,7 @@ export const demoWorld: WorldDefinition = {
       'iran-paper-net',
       'iran-paper-modern',
       'hero-wholesale-v1',
-      'authored:hero-wholesale:v1',
-      'models/hero-wholesale-v1.glb',
+      'hero-wholesale-v1',
       -5.35,
       -13.5,
       0,
@@ -169,8 +161,7 @@ export const demoWorld: WorldDefinition = {
       'kaghaz-foroush',
       'kaghazforoush-stockroom',
       'hero-packaging-v1',
-      'authored:hero-packaging:v1',
-      'models/hero-packaging-v1.glb',
+      'hero-packaging-v1',
       5.35,
       -13.5,
       Math.PI,
@@ -182,8 +173,7 @@ export const demoWorld: WorldDefinition = {
       'mellat-pub',
       'mellat-editorial',
       'hero-paper-studio-v1',
-      'authored:hero-paper-studio:v1',
-      'models/hero-paper-studio-v1.glb',
+      'hero-paper-studio-v1',
       -5.35,
       -3,
       0,
