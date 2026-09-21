@@ -8,6 +8,7 @@ async function source(relative) {
 
 test('v0.13 is a fidelity-preserving rebuild on v0.12 contracts', async () => {
   const world = await source('../src/world/demoWorld.ts')
+  const assets = await source('../src/assets/worldAssetRegistry.ts')
   const renderer = await source('../src/components/RoomRenderer.tsx')
   const fileRenderer = await source('../src/components/FileRoomRenderer.tsx')
   const generator = await source('./generate-authored-shop.mjs')
@@ -18,8 +19,9 @@ test('v0.13 is a fidelity-preserving rebuild on v0.12 contracts', async () => {
   assert.match(presentation, /revealRadius: 18/)
   assert.match(renderer, /import\('\.\/FileRoomRenderer'\)/)
   assert.match(fileRenderer, /InstancedMesh/)
-  assert.match(world, /hero-wholesale-v1\.glb/)
-  assert.match(world, /authored:hero-wholesale:v1/)
+  assert.match(world, /hero-wholesale-v1/)
+  assert.match(assets, /hero-wholesale-v1\.glb/)
+  assert.match(assets, /authored:hero-wholesale:v1/)
   assert.match(generator, /TEXCOORD_0/)
   assert.match(generator, /RoundedBoxGeometry/)
 })
