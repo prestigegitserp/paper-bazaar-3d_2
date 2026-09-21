@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.16.0 — Production art + portable asset runtime
+
+### Repository boundary
+- continues from migrated stable v0.15 in `prestigegitserp/paper-bazaar-3d_2`
+- legacy repository remains frozen
+- creates an independent new-repo v0.15 rollback snapshot before v0.16
+
+### Production art
+- three distinct generated Hero Shop assets: wholesale, packaging and paper studio
+- variant-specific geometry/props while preserving shared semantic hotspot nodes
+- warm market art direction replaces the previous cyber-blue presentation
+- local key/fill/rim lighting profiles mounted only with resident hero rooms
+- asset-specific wear/label profiles for all three hero shops
+
+### Texture pipeline
+- deterministic 1024×1024 / 16-tile production material atlas
+- KTX2 ETC1S + mipmap build using KTX-Software
+- Basis transcoder shipped with static production build
+- KTX2Loader runtime path with PNG fallback
+- shared atlas tile variants for paper/cardboard/paint/silver/label materials
+
+### Architecture
+- adds `presentationProfileId` independent from vendor/catalog data
+- adds presentation registry for LOD, PBR bindings, shadow policy, lighting and atlas dressing
+- RoomRenderer streaming policy is no longer hard-coded by asset type
+- future authored GLB and glTF scan assets can opt into profiles without renderer forks
+
+### Performance
+- preserves v0.15 procedural hibernation thresholds
+- hero-specific file prefetch/reveal/sleep budgets
+- no hero light shadow maps
+- small/transparent authored props default out of shadow casting
+- authored mesh batching and file-room re-hibernation preserved
+
 ## 0.15.0 — Human market runtime
 
 ### Lineage
