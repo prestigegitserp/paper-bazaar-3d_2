@@ -2,7 +2,6 @@ import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import { PlaneGeometry, Texture } from 'three'
 import { getAssetPresentationProfile } from '../presentation/assetPresentationRegistry'
-import { loadProductionMaterialAtlas } from '../scene/materials/productionAtlas'
 import type { RoomDefinition } from '../world/types'
 
 const geometryCache = new Map<number, PlaneGeometry>()
@@ -37,7 +36,8 @@ export default function HeroRoomArtDirection({ room }: { room: RoomDefinition })
   useEffect(() => {
     if (!hero) return
     let active = true
-    void loadProductionMaterialAtlas(gl)
+    void import('../scene/materials/productionAtlas')
+      .then(({ loadProductionMaterialAtlas }) => loadProductionMaterialAtlas(gl))
       .then((texture) => {
         if (!active) return
         setAtlas(texture)
