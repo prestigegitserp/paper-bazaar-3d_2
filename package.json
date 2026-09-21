@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "start": "node server/index.mjs",
-    "test": "node --test server/price-utils.test.mjs server/catalog.test.mjs server/scrape.test.mjs scripts/authored-shop.test.mjs scripts/world-logic.test.mjs scripts/visual-regression.test.mjs scripts/material-realism.test.mjs scripts/geometry-realism.test.mjs scripts/performance-regression.test.mjs scripts/v013-rebuild.test.mjs scripts/v013-deep-perf.test.mjs scripts/v014-living-market.test.mjs scripts/v015-human-market.test.mjs",
+    "test": "node --test server/price-utils.test.mjs server/catalog.test.mjs server/scrape.test.mjs scripts/authored-shop.test.mjs scripts/world-logic.test.mjs scripts/visual-regression.test.mjs scripts/material-realism.test.mjs scripts/geometry-realism.test.mjs scripts/performance-regression.test.mjs scripts/v013-rebuild.test.mjs scripts/v013-deep-perf.test.mjs scripts/v014-living-market.test.mjs scripts/v015-human-market.test.mjs scripts/v016-production-art.test.mjs",
     "check": "npm test && npm run build",
     "refresh:prices": "node server/scrape.mjs",
     "typecheck": "tsc -b --pretty false",
