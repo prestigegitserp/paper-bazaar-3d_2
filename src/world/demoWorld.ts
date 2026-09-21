@@ -114,6 +114,9 @@ function authoredShop(
   label: string,
   themeKey: string,
   profileId: string,
+  presentationProfileId: string,
+  assetId: string,
+  url: string,
   x: number,
   z: number,
   rotationY: number,
@@ -124,11 +127,17 @@ function authoredShop(
     ...base,
     asset: {
       kind: 'gltf',
-      url: 'models/iran-paper-authored-v4.glb',
-      assetId: 'authored:iran-paper-net:store:v4',
-      version: '4.0.0',
+      url,
+      assetId,
+      version: '1.0.0',
       metersPerUnit: 1,
       source: 'authored'
+    },
+    experience: {
+      ...base.experience,
+      profileId,
+      presentationProfileId,
+      catalogDocumentId: `catalog:${vendorId}:2026`
     },
     hotspots: authoredShopHotspots(vendorId)
   }
@@ -137,13 +146,49 @@ function authoredShop(
 export const demoWorld: WorldDefinition = {
   id: 'paper-bazaar-15khordad-inspired',
   name: 'Paper Bazaar 3D — Charsou-inspired modern paper passage',
-  version: 10,
+  version: 11,
   spawn: [0, 1.68, 18.45],
   bounds: { minX: -8.38, maxX: 8.38, minZ: -18.9, maxZ: 20.3 },
   rooms: [
-    authoredShop('shop:iran-paper-net', 'شبکه کاغذ ایران', 'iran-paper-net', 'iran-paper-modern', -5.35, -13.5, 0, 'iran-paper-net'),
-    shop('shop:kaghaz-foroush', 'کاغذ فروش', 'kaghaz-foroush', 'kaghazforoush-stockroom', 5.35, -13.5, Math.PI, 'kaghaz-foroush'),
-    shop('shop:mellat-pub', 'انتشارات ملت / کیمیا تجارت', 'mellat-pub', 'mellat-editorial', -5.35, -3, 0, 'mellat-pub'),
+    authoredShop(
+      'shop:iran-paper-net',
+      'شبکه کاغذ ایران',
+      'iran-paper-net',
+      'iran-paper-modern',
+      'hero-wholesale-v1',
+      'authored:hero-wholesale:v1',
+      'models/hero-wholesale-v1.glb',
+      -5.35,
+      -13.5,
+      0,
+      'iran-paper-net'
+    ),
+    authoredShop(
+      'shop:kaghaz-foroush',
+      'کاغذ فروش',
+      'kaghaz-foroush',
+      'kaghazforoush-stockroom',
+      'hero-packaging-v1',
+      'authored:hero-packaging:v1',
+      'models/hero-packaging-v1.glb',
+      5.35,
+      -13.5,
+      Math.PI,
+      'kaghaz-foroush'
+    ),
+    authoredShop(
+      'shop:mellat-pub',
+      'انتشارات ملت / کیمیا تجارت',
+      'mellat-pub',
+      'mellat-editorial',
+      'hero-paper-studio-v1',
+      'authored:hero-paper-studio:v1',
+      'models/hero-paper-studio-v1.glb',
+      -5.35,
+      -3,
+      0,
+      'mellat-pub'
+    ),
     shop('shop:kaghaz20', 'کاغذ ۲۰', 'kaghaz20', 'kaghaz20-retail', 5.35, -3, Math.PI, 'kaghaz20'),
     shop('shop:seraj-cellulose', 'سراج سلولز / برادران محمودی', 'seraj-cellulose', 'seraj-heritage', -5.35, 7.5, 0, 'seraj-cellulose'),
     shop('shop:scan-preview', 'غرفه نمونه اسکن و Digital Twin', 'scan-preview', 'scan-lab', 5.35, 7.5, Math.PI)
