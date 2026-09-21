@@ -1,0 +1,173 @@
+{
+  "title": "Paper Bazaar 3D — بازار عمده کاغذ ایران",
+  "generatedAt": "2026-09-20T11:38:00+03:30",
+  "currency": "IRT",
+  "disclaimer": "این پروژه یک دموی مستقل است. طراحی غرفه‌ها مفهومی است و نمایندگی یا هویت بصری رسمی فروشندگان محسوب نمی‌شود. قیمت‌ها اسنپ‌شات صفحات عمومی وب هستند و پیش از خرید باید در منبع اصلی استعلام شوند.",
+  "vendors": [
+    {
+      "id": "iran-paper-net",
+      "name": "شبکه کاغذ ایران",
+      "shortName": "Iran Paper Net",
+      "tagline": "کاغذ، مقوا و سفارش عمده با تمرکز بر قیمت روز",
+      "website": "https://iranpapernet.ir/",
+      "sourceLabel": "iranpapernet.ir",
+      "products": [
+        {
+          "id": "ipn-copymax-a4",
+          "name": "کاغذ A4 کپی مکس",
+          "priceText": "۱٬۱۰۰٬۰۰۰ تومان",
+          "numericPrice": 1100000,
+          "unit": "قیمت درج‌شده در صفحه محصول/فروشگاه",
+          "sourceUrl": "https://iranpapernet.ir/",
+          "observedAt": "2026-09-20",
+          "note": "قیمت وب ممکن است با قیمت لحظه‌ای بازار متفاوت باشد."
+        },
+        {
+          "id": "ipn-chenming",
+          "name": "کاغذ تحریر چنمینگ",
+          "priceText": "۹٬۰۰۰٬۰۰۰ تومان",
+          "numericPrice": 9000000,
+          "unit": "قیمت نمایشی سایت",
+          "sourceUrl": "https://iranpapernet.ir/",
+          "observedAt": "2026-09-20"
+        },
+        {
+          "id": "ipn-explore-gloss",
+          "name": "گلاسه اکسپلور",
+          "priceText": "۴۵۰٬۰۰۰ تومان",
+          "numericPrice": 450000,
+          "unit": "قیمت نمایشی سایت",
+          "sourceUrl": "https://iranpapernet.ir/",
+          "observedAt": "2026-09-20"
+        }
+      ]
+    },
+    {
+      "id": "kaghaz-foroush",
+      "name": "کاغذ فروش",
+      "shortName": "Kaghaz Foroush",
+      "tagline": "فروش تخصصی کاغذ و مقوا با تمرکز بر سفارش پالتی",
+      "website": "https://www.kaghazforoush.ir/",
+      "sourceLabel": "kaghazforoush.ir",
+      "products": [
+        {
+          "id": "kf-april-6090",
+          "name": "تحریر ۷۰ گرم ۶۰×۹۰ اندونزی آپریل مشکی",
+          "priceText": "۱٬۴۸۰٬۰۰۰ تا ۳۱٬۰۸۰٬۰۰۰ تومان",
+          "unit": "بسته به گزینه/مقدار انتخابی سایت",
+          "sourceUrl": "https://www.kaghazforoush.ir/product/%DA%A9%D8%A7%D8%BA%D8%B0-%D8%AA%D8%AD%D8%B1%DB%8C%D8%B1-70-%DA%AF%D8%B1%D9%85-60-%D8%AF%D8%B1-90-%D8%A7%D9%86%D8%AF%D9%88%D9%86%D8%B2%DB%8C-%D8%A2%D9%BE%D8%B1%DB%8C%D9%84-%D9%85%D8%B4%DA%A9%DB%8C/",
+          "observedAt": "2026-09-20"
+        },
+        {
+          "id": "kf-april-70100",
+          "name": "تحریر ۷۰ گرم ۷۰×۱۰۰ اندونزی آپریل مشکی",
+          "priceText": "۱٬۷۸۰٬۰۰۰ تا ۳۷٬۳۸۰٬۰۰۰ تومان",
+          "unit": "بسته به گزینه/مقدار انتخابی سایت",
+          "sourceUrl": "https://www.kaghazforoush.ir/product-tag/%DA%A9%D8%A7%D8%BA%D8%B0-%D8%AA%D8%AD%D8%B1%DB%8C%D8%B1-%D8%A2%D9%BE%D8%B1%DB%8C%D9%84/",
+          "observedAt": "2026-09-20"
+        }
+      ]
+    },
+    {
+      "id": "mellat-pub",
+      "name": "انتشارات ملت / کیمیا تجارت",
+      "shortName": "Mellat Paper",
+      "tagline": "پخش A4 و سفارش‌های تیراژ بالا",
+      "website": "https://www.mellat-pub.com/",
+      "sourceLabel": "mellat-pub.com",
+      "products": [
+        {
+          "id": "mellat-double-a",
+          "name": "کاغذ A4 دبل A اصلی",
+          "priceText": "۱٬۴۰۰٬۰۰۰ تومان",
+          "numericPrice": 1400000,
+          "unit": "قیمت درج‌شده در جدول سایت؛ استعلام تلفنی توصیه شده",
+          "sourceUrl": "https://www.mellat-pub.com/",
+          "observedAt": "2026-09-20"
+        },
+        {
+          "id": "mellat-color-a4",
+          "name": "کاغذ A4 رنگی ایرانی",
+          "priceText": "۸۵۰٬۰۰۰ تومان",
+          "numericPrice": 850000,
+          "unit": "قیمت درج‌شده در جدول سایت",
+          "sourceUrl": "https://www.mellat-pub.com/",
+          "observedAt": "2026-09-20"
+        },
+        {
+          "id": "mellat-cellprint",
+          "name": "کاغذ A4 Cell Print بسته ۵۰۰ برگی",
+          "priceText": "۶۴۰٬۰۰۰ تومان",
+          "numericPrice": 640000,
+          "unit": "قیمت عمده درج‌شده در صفحه محصول",
+          "sourceUrl": "https://www.mellat-pub.com/product/%DA%A9%D8%A7%D8%BA%D8%B0-a4-%D8%B3%D9%84-%D9%BE%D8%B1%DB%8C%D9%86%D8%AA-%D8%A8%D8%B3%D8%AA%D9%87-5-%D8%B9%D8%AF%D8%AF%DB%8C/",
+          "observedAt": "2026-09-20"
+        }
+      ]
+    },
+    {
+      "id": "kaghaz20",
+      "name": "کاغذ ۲۰",
+      "shortName": "Kaghaz 20",
+      "tagline": "مرکز تخصصی کاغذهای اداری و Double A",
+      "website": "https://kaghaz20.ir/",
+      "sourceLabel": "kaghaz20.ir",
+      "products": [
+        {
+          "id": "k20-doublea-a4",
+          "name": "کاغذ A4 دابل A",
+          "priceText": "۹۵۰٬۰۰۰ تومان",
+          "numericPrice": 950000,
+          "unit": "قیمت درج‌شده در فروشگاه",
+          "sourceUrl": "https://kaghaz20.ir/",
+          "observedAt": "2026-09-20"
+        },
+        {
+          "id": "k20-copymax-a4",
+          "name": "کاغذ A4 کپی مکس",
+          "priceText": "۶۵۰٬۰۰۰ تومان",
+          "numericPrice": 650000,
+          "unit": "قیمت درج‌شده در فروشگاه",
+          "sourceUrl": "https://kaghaz20.ir/",
+          "observedAt": "2026-09-20"
+        },
+        {
+          "id": "k20-doublea-a3",
+          "name": "کاغذ A3 دابل A",
+          "priceText": "۷۲۰٬۰۰۰ تومان",
+          "numericPrice": 720000,
+          "unit": "قیمت درج‌شده در فروشگاه",
+          "sourceUrl": "https://kaghaz20.ir/",
+          "observedAt": "2026-09-20"
+        }
+      ]
+    },
+    {
+      "id": "seraj-cellulose",
+      "name": "سراج سلولز / برادران محمودی",
+      "shortName": "Seraj Cellulose",
+      "tagline": "کاغذ و مقوای صنعتی، کرافت، تحریر و خدمات برش",
+      "website": "https://serajcellulosepars.com/",
+      "sourceLabel": "serajcellulosepars.com",
+      "products": [
+        {
+          "id": "seraj-kraft-yash",
+          "name": "کاغذ کرافت یاش — بند و پالت",
+          "priceText": "استعلام قیمت",
+          "unit": "قیمت عمومی ثابت در صفحه درج نشده؛ درخواست استعلام",
+          "sourceUrl": "https://serajcellulosepars.com/",
+          "observedAt": "2026-09-20",
+          "note": "فروشگاه برای این گروه کالا درخواست استعلام قیمت ارائه می‌کند."
+        },
+        {
+          "id": "seraj-writing-paper",
+          "name": "کاغذ تحریر",
+          "priceText": "استعلام قیمت",
+          "unit": "رول و ورق؛ استعلام روز",
+          "sourceUrl": "https://serajcellulosepars.com/",
+          "observedAt": "2026-09-20"
+        }
+      ]
+    }
+  ]
+}

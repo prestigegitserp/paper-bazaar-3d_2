@@ -1,0 +1,45 @@
+{
+  "name": "paper-bazaar-3d",
+  "private": true,
+  "version": "0.15.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:web\" \"npm:dev:api\"",
+    "dev:web": "vite",
+    "dev:api": "node --watch server/index.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "start": "node server/index.mjs",
+    "test": "node --test server/price-utils.test.mjs server/catalog.test.mjs server/scrape.test.mjs scripts/authored-shop.test.mjs scripts/world-logic.test.mjs scripts/visual-regression.test.mjs scripts/material-realism.test.mjs scripts/geometry-realism.test.mjs scripts/performance-regression.test.mjs scripts/v013-rebuild.test.mjs scripts/v013-deep-perf.test.mjs scripts/v014-living-market.test.mjs scripts/v015-human-market.test.mjs",
+    "check": "npm test && npm run build",
+    "refresh:prices": "node server/scrape.mjs",
+    "typecheck": "tsc -b --pretty false",
+    "generate:authored-shop": "node scripts/generate-authored-shop.mjs",
+    "predev:web": "node scripts/generate-authored-shop.mjs",
+    "prebuild": "node scripts/generate-authored-shop.mjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "10.7.6",
+    "@react-three/fiber": "9.3.0",
+    "cheerio": "1.1.2",
+    "express": "5.1.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "three": "0.180.0",
+    "zustand": "5.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "24.3.1",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
+    "@types/three": "0.180.0",
+    "@vitejs/plugin-react": "5.0.2",
+    "concurrently": "9.2.1",
+    "typescript": "5.9.2",
+    "vite": "7.1.5"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "packageManager": "npm@10.9.2"
+}
