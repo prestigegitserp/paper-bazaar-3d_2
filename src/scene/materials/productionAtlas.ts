@@ -1,4 +1,4 @@
-import { Texture, TextureLoader, SRGBColorSpace, WebGLRenderer } from 'three'
+import { ClampToEdgeWrapping, Texture, TextureLoader, SRGBColorSpace, WebGLRenderer } from 'three'
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js'
 import { resolveAssetUrl } from '../../assets/resolveAssetUrl'
 
@@ -36,4 +36,31 @@ export function loadProductionMaterialAtlas(renderer: WebGLRenderer) {
     if (atlasPromises.get(renderer) === promise) atlasPromises.delete(renderer)
   })
   return promise
+}
+
+
+const tileVariants = new WeakMap<Texture, Map<number, Texture>>()
+
+export function getProductionAtlasTile(source: Texture, tile: number) {
+  let variants = tileVariants.get(source)
+  if (!variants) {
+    variants = new Map()
+    tileVariants.set(source, variants)
+  }
+
+  const cached = variants.get(tile)
+  if (cached) return cached
+
+  const texture = source.clone()
+  const col = tile % 4
+  const row = Math.floor(tile / 4)
+  const inset = 0.0015
+  texture.wrapS = ClampToEdgeWrapping
+  texture.wrapT = ClampToEdgeWrapping
+  texture.repeat.set(0.25 - inset * 2, 0.25 - inset * 2)
+  texture.offset.set(col * 0.25 + inset, (3 - row) * 0.25 + inset)
+  texture.colorSpace = SRGBColorSpace
+  texture.needsUpdate = true
+  variants.set(tile, texture)
+  return texture
 }
