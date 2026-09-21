@@ -22,15 +22,15 @@ export default function MallScene() {
 
   return (
     <>
-      <color attach="background" args={['#e7e8e6']} />
-      <fog attach="fog" args={['#dcdedc', 35, 78]} />
+      <color attach="background" args={['#c9c1b3']} />
+      <fog attach="fog" args={['#bfb6a8', 34, 74]} />
 
-      <ambientLight intensity={0.38} />
-      <hemisphereLight intensity={0.56} color="#fffaf0" groundColor="#707779" />
+      <ambientLight intensity={0.24} />
+      <hemisphereLight intensity={0.42} color="#fff1d7" groundColor="#5f6664" />
       <directionalLight
         position={[5, 12, 8]}
-        intensity={1.08}
-        color="#fff6e6"
+        intensity={0.86}
+        color="#ffe3bd"
         castShadow={started}
         shadow-mapSize={[1536, 1536]}
         shadow-camera-near={1}
