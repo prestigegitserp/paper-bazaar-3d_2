@@ -67,8 +67,8 @@ function useProceduralDetail(room: RoomDefinition) {
     const dz = state.player.z - room.position[2]
     const distanceSq = dx * dx + dz * dz
     const forceRadiusSq = lod.forceDetailRadius * lod.forceDetailRadius
-    const wakeRadiusSq = lod.revealRadius * lod.revealRadius
-    const sleepRadiusSq = lod.sleepRadius * lod.sleepRadius
+    const wakeRadiusSq = lod.proceduralWakeRadius * lod.proceduralWakeRadius
+    const sleepRadiusSq = lod.proceduralSleepRadius * lod.proceduralSleepRadius
 
     toRoom.current.set(room.position[0] - camera.position.x, 0, room.position[2] - camera.position.z)
     const toRoomLengthSq = toRoom.current.lengthSq()
