@@ -38,11 +38,13 @@ test('scene has local reflection environment and subtle macro floor wear', async
   assert.match(wear, /CanvasTexture/)
 })
 
-test('authored GLB shares the same PBR material pipeline', async () => {
+test('authored GLB shares the same profile-driven PBR material pipeline', async () => {
   const renderer = await source('../src/components/FileRoomRenderer.tsx')
-  assert.match(renderer, /mall-porcelain/)
-  assert.match(renderer, /mall-plaster/)
-  assert.match(renderer, /bazaar-plywood/)
+  const presentation = await source('../src/presentation/assetPresentationRegistry.ts')
+  assert.match(presentation, /mall-porcelain/)
+  assert.match(presentation, /mall-plaster/)
+  assert.match(presentation, /wood-walnut/)
+  assert.match(renderer, /presentation\.materialBindings/)
   assert.match(renderer, /acquirePbrTextureSet/)
   assert.match(renderer, /transmission/)
   assert.match(renderer, /MeshPhysicalMaterial/)
