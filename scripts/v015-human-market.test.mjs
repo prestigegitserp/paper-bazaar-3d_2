@@ -90,6 +90,7 @@ test('human market actions support quick sample, quote basket and guide flow', a
 test('authored hero shop v4 adds work props and stays local to the file renderer', async () => {
   const generator = await source('./generate-authored-shop.mjs')
   const world = await source('../src/world/demoWorld.ts')
+  const assets = await source('../src/assets/worldAssetRegistry.ts')
   const fileRenderer = await source('../src/components/FileRoomRenderer.tsx')
 
   assert.match(generator, /TorusGeometry/)
@@ -98,7 +99,8 @@ test('authored hero shop v4 adds work props and stays local to the file renderer
   assert.match(generator, /hero_handtruck_wheel_a/)
   assert.match(generator, /hero_sample_book_/)
   assert.match(generator, /hero-wholesale-v1\.glb/)
-  assert.match(world, /authored:hero-wholesale:v1/)
+  assert.match(world, /hero-wholesale-v1/)
+  assert.match(assets, /authored:hero-wholesale:v1/)
   assert.match(fileRenderer, /HeroRoomArtDirection/)
   assert.match(fileRenderer, /presentation\.shadow/)
 })
