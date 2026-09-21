@@ -12,6 +12,8 @@ export type RoomLodProfile = {
   revealRadius: number
   sleepRadius: number
   forceDetailRadius: number
+  proceduralWakeRadius: number
+  proceduralSleepRadius: number
   viewWakeDot: number
   viewSleepDot: number
 }
@@ -50,6 +52,8 @@ const DEFAULT_LOD: RoomLodProfile = {
   revealRadius: 18,
   sleepRadius: 22,
   forceDetailRadius: 6.8,
+  proceduralWakeRadius: 11.5,
+  proceduralSleepRadius: 15.5,
   viewWakeDot: -0.18,
   viewSleepDot: -0.72
 }
