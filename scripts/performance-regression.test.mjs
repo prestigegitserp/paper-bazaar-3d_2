@@ -64,11 +64,13 @@ test('PBR residency is ref-counted and build concurrency is bounded', async () =
 
 test('v0.12 keeps the v0.11 authored asset and realism pipeline intact', async () => {
   const world = await source('../src/world/demoWorld.ts')
+  const assets = await source('../src/assets/worldAssetRegistry.ts')
   const generator = await source('./generate-authored-shop.mjs')
   const material = await source('../src/scene/materials/SurfaceMaterial.tsx')
 
-  assert.match(world, /hero-wholesale-v1\.glb/)
-  assert.match(world, /authored:hero-wholesale:v1/)
+  assert.match(world, /hero-wholesale-v1/)
+  assert.match(assets, /hero-wholesale-v1\.glb/)
+  assert.match(assets, /authored:hero-wholesale:v1/)
   assert.match(generator, /TEXCOORD_0/)
   assert.match(generator, /RoundedBoxGeometry/)
   assert.match(material, /meshPhysicalMaterial/)
