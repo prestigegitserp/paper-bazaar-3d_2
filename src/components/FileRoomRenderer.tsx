@@ -33,6 +33,7 @@ import {
 } from '../scene/materials/microDetailTextures'
 import { preferredPbrResolution } from '../scene/materials/textureQuality'
 import { warmPbrTextureSet } from '../scene/materials/textureUploadScheduler'
+import { getProductionAtlasTile, loadProductionMaterialAtlas } from '../scene/materials/productionAtlas'
 import { useAppStore, type RenderQuality } from '../store'
 import { resolveHotspotInteraction } from '../world/hotspots'
 import type { RoomDefinition } from '../world/types'
@@ -335,6 +336,35 @@ function applyAuthoredTextureSets(
   })
 }
 
+const atlasMaterialTiles: Partial<Record<string, number>> = {
+  paper: 0,
+  cardboard: 2,
+  green: 8,
+  yellow: 9,
+  red: 10,
+  blue: 11,
+  silver: 12,
+  black: 13,
+  white: 0
+}
+
+function applyProductionAtlasMaterials(scene: Object3D, atlas: import('three').Texture) {
+  scene.traverse((object) => {
+    if (!(object instanceof Mesh)) return
+    const materials = Array.isArray(object.material) ? object.material : [object.material]
+
+    for (const material of materials) {
+      if (!(material instanceof MeshStandardMaterial)) continue
+      const tile = atlasMaterialTiles[material.name]
+      if (tile === undefined) continue
+
+      material.map = getProductionAtlasTile(atlas, tile)
+      material.color.set('#ffffff')
+      material.needsUpdate = true
+    }
+  })
+}
+
 function disposeSceneMaterials(scene: Object3D) {
   const disposed = new Set<Material>()
   scene.traverse((object) => {
@@ -374,11 +404,22 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
     if (!authored) return
 
     let active = true
+    void loadProductionMaterialAtlas(gl)
+      .then((atlas) => {
+        if (!active) return
+        applyProductionAtlasMaterials(scene, atlas)
+        invalidate()
+      })
+      .catch(() => {
+        // Material colors and micro detail remain as the offline-safe fallback.
+      })
+
     const leases: PbrTextureLease[] = []
     const sets = new Map<string, PbrTextureSet>()
     const resolution = preferredPbrResolution(quality, true)
 
     const tasks = Object.entries(presentation.materialBindings).map(async ([materialName, binding]) => {
+
       if (!binding) return
       const lease = await acquirePbrTextureSet(binding.surface, {
         repeat: binding.repeat,
