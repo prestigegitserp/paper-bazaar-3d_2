@@ -63,3 +63,17 @@ v0.15 جدید باید مستقیماً از `release/v0.14.0` مشتق شود.
 - `main` به commit تأییدشده‌ی v0.15 منتقل می‌شود.
 - `release/v0.15.0` از همان commit ساخته می‌شود.
 - `release/v0.14.0` و تمام releaseهای قبل بدون تغییر باقی می‌مانند.
+
+
+## Repository boundary from v0.16
+
+از v0.16 به بعد تنها repository فعال توسعه:
+`prestigegitserp/paper-bazaar-3d_2`
+
+repository قبلی `prestigegitserp/paper-bazaar-3d` frozen است و نباید برای توسعه‌های بعدی mutation شود.
+
+در repo جدید:
+- `release/v0.15.0` snapshot مهاجرتی و نقطه rollback است.
+- v0.16 از همان snapshot منشعب می‌شود.
+- هر release بعدی snapshot مستقل `release/vX.Y.Z` خواهد داشت.
+- `main` فقط پس از CI و Pages موفق promote می‌شود.
