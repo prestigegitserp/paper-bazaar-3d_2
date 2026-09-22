@@ -7,6 +7,17 @@ type MobileInputState = {
   zoomDelta: number
 }
 
+const listeners = new Set<() => void>()
+
+function emitInput() {
+  for (const listener of listeners) listener()
+}
+
+export function subscribeMobileInput(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
 const state: MobileInputState = {
   moveX: 0,
   moveY: 0,
@@ -19,6 +30,7 @@ const state: MobileInputState = {
 export function setMobileMove(x: number, y: number) {
   state.moveX = Math.max(-1, Math.min(1, x))
   state.moveY = Math.max(-1, Math.min(1, y))
+  emitInput()
 }
 
 export function getMobileMove() {
@@ -28,6 +40,7 @@ export function getMobileMove() {
 export function addMobileLook(x: number, y: number) {
   state.lookX += x
   state.lookY += y
+  emitInput()
 }
 
 export function consumeMobileLook() {
@@ -39,6 +52,7 @@ export function consumeMobileLook() {
 
 export function triggerMobileInteract() {
   state.interactSequence += 1
+  emitInput()
 }
 
 export function getMobileInteractSequence() {
@@ -47,6 +61,7 @@ export function getMobileInteractSequence() {
 
 export function addMobileZoom(delta: number) {
   state.zoomDelta += delta
+  emitInput()
 }
 
 export function consumeMobileZoom() {
@@ -61,4 +76,5 @@ export function resetMobileInput() {
   state.lookX = 0
   state.lookY = 0
   state.zoomDelta = 0
+  emitInput()
 }
