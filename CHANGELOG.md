@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.17.0 — Root performance + baked realism
+
+### Lineage
+- built directly from stable `release/v0.16.0`
+- no pre-existing v0.17 branch/release was used as ancestry
+- preserves `release/v0.15.0`, `release/v0.16.0` and every older snapshot
+
+### Render loop
+- switches the entire Canvas to demand rendering after entry
+- adds explicit motion frame scheduling instead of rendering at monitor refresh rate
+- tightens DPR bounds while retaining AdaptiveDpr recovery
+- removes duplicate AdaptiveDpr and PCSS SoftShadows
+
+### GPU
+- removes corridor PointLight/SpotLight fan-out
+- reduces primary shadow map to 1024 and disables it outside Cinematic
+- removes transparent full-floor imperfection overlay
+- halves physical transmission render target resolution
+- converts common surfaces from MeshPhysicalMaterial to MeshStandardMaterial
+- reserves physical transmission for Cinematic hero glass only
+- defers authored full PBR upgrades until performance has recovered
+
+### CPU
+- unifies procedural/file room residency into one frame callback per room
+- adds compact interaction-target registry
+- broadphase raycasts only registered interactions
+- full-scene raycast runs only for exact occlusion after a target hit
+- removes duplicate R3F pointer-event raycasting
+- removes square roots from circle collision hot path
+
+### Realism
+- generates COLOR_0 baked vertex lighting in all three Hero GLBs
+- reduces plastic-looking global clearcoat/anisotropy
+- keeps one conditional no-shadow hero accent light
+- retains v0.16 KTX2 atlas, hero variants, wear, signage and scan-ready asset profiles
+
+### Debug
+- F3 separates broadphase and occlusion raycasts
+- reports interaction target count and actual DPR
+- retains draw-call, triangle, texture, geometry and room-residency metrics
+
 ## 0.16.0 — Production art + portable asset runtime
 
 ### Repository boundary
