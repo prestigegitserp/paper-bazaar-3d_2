@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
-import { useAppStore } from '../store'
 
 type IdleWindow = Window & {
   requestIdleCallback?: (
@@ -14,13 +13,8 @@ export default function SceneWarmup() {
   const gl = useThree((state) => state.gl)
   const scene = useThree((state) => state.scene)
   const camera = useThree((state) => state.camera)
-  const started = useAppStore((state) => state.started)
-  const quality = useAppStore((state) => state.quality)
-  const activeRoomId = useAppStore((state) => state.activeRoomId)
 
   useEffect(() => {
-    if (!started) return
-
     const idleWindow = window as IdleWindow
     let cancelled = false
     let idleId: number | null = null
@@ -34,9 +28,9 @@ export default function SceneWarmup() {
     }
 
     if (idleWindow.requestIdleCallback) {
-      idleId = idleWindow.requestIdleCallback(compile, { timeout: 1400 })
+      idleId = idleWindow.requestIdleCallback(compile, { timeout: 900 })
     } else {
-      timer = window.setTimeout(compile, 220)
+      timer = window.setTimeout(compile, 120)
     }
 
     return () => {
@@ -44,7 +38,7 @@ export default function SceneWarmup() {
       if (idleId !== null) idleWindow.cancelIdleCallback?.(idleId)
       if (timer !== null) window.clearTimeout(timer)
     }
-  }, [activeRoomId, camera, gl, quality, scene, started])
+  }, [camera, gl, scene])
 
   return null
 }
