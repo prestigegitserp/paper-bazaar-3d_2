@@ -16,26 +16,25 @@ test('modern passage surfaces are backed by real multi-map PBR assets', async ()
   assert.match(registry, /rough/)
 })
 
-test('surface renderer uses physical material, anisotropic filtering and shared PBR cache', async () => {
+test('surface renderer uses standard-first PBR, adaptive anisotropy and shared cache', async () => {
   const material = await source('../src/scene/materials/SurfaceMaterial.tsx')
   const cache = await source('../src/scene/materials/pbrTextureCache.ts')
-  assert.match(material, /meshPhysicalMaterial/)
-  assert.match(material, /clearcoat/)
-  assert.match(material, /anisotropy/)
+  assert.match(material, /meshStandardMaterial/)
+  assert.doesNotMatch(material, /meshPhysicalMaterial/)
+  assert.match(material, /textureAnisotropy/)
+  assert.match(material, /performanceCurrent > 0\.97/)
   assert.match(material, /acquirePbrTextureSet/)
   assert.match(cache, /getMaxAnisotropy|anisotropy/)
   assert.match(cache, /sourceTexturePromises/)
 })
 
-test('scene has local reflection environment and subtle macro floor wear', async () => {
+test('scene has local reflection environment without full-floor transparent overdraw', async () => {
   const mall = await source('../src/components/MallScene.tsx')
   const environment = await source('../src/components/MaterialEnvironment.tsx')
-  const wear = await source('../src/components/FloorImperfections.tsx')
   assert.match(mall, /MaterialEnvironment/)
-  assert.match(mall, /FloorImperfections/)
+  assert.doesNotMatch(mall, /FloorImperfections/)
   assert.match(environment, /RoomEnvironment/)
   assert.match(environment, /scene\.environment/)
-  assert.match(wear, /CanvasTexture/)
 })
 
 test('authored GLB shares the same profile-driven PBR material pipeline', async () => {
@@ -54,7 +53,7 @@ test('cinematic realism pass has no decorative sparkles or manual tile grout ove
   const effects = await source('../src/components/ExperienceEffects.tsx')
   const architecture = await source('../src/components/Architecture.tsx')
   assert.doesNotMatch(effects, /Sparkles/)
-  assert.match(effects, /SoftShadows/)
+  assert.doesNotMatch(effects, /SoftShadows/)
   assert.doesNotMatch(architecture, /zSeams|xSeams/)
   assert.match(architecture, /surface="mall-porcelain"/)
 })
