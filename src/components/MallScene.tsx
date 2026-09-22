@@ -1,7 +1,6 @@
 import { AdaptiveDpr } from '@react-three/drei'
 import { useMemo } from 'react'
 import Architecture from './Architecture'
-import FloorImperfections from './FloorImperfections'
 import MaterialEnvironment from './MaterialEnvironment'
 import MotionPerformanceController from './MotionPerformanceController'
 import DiagnosticsProbe from './DiagnosticsProbe'
@@ -18,6 +17,7 @@ export default function MallScene() {
   const world = useAppStore((state) => state.world)
   const started = useAppStore((state) => state.started)
   const diagnosticsEnabled = useAppStore((state) => state.diagnosticsEnabled)
+  const quality = useAppStore((state) => state.quality)
   const vendorsById = useMemo(() => new Map(vendors.map((vendor) => [vendor.id, vendor])), [vendors])
 
   return (
@@ -31,8 +31,8 @@ export default function MallScene() {
         position={[5, 12, 8]}
         intensity={0.86}
         color="#ffe3bd"
-        castShadow={started}
-        shadow-mapSize={[1536, 1536]}
+        castShadow={started && quality === 'cinematic'}
+        shadow-mapSize={[1024, 1024]}
         shadow-camera-near={1}
         shadow-camera-far={46}
         shadow-camera-left={-10}
@@ -48,7 +48,6 @@ export default function MallScene() {
       <MotionPerformanceController />
       <SceneWarmup />
       <Architecture />
-      {started && <FloorImperfections />}
 
       {world.rooms.map((room) => (
         <RoomRenderer
