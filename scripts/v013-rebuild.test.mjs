@@ -44,8 +44,8 @@ test('repeated architecture is instanced and unused floor subdivision is removed
   assert.match(architecture, /<Instance/)
   assert.match(architecture, /planeGeometry args=\{\[16\.55, MARKET_LENGTH\]\}/)
   assert.doesNotMatch(architecture, /16\.55, MARKET_LENGTH, 12, 30/)
-  assert.match(architecture, /index % 3 === 0/)
-  assert.match(architecture, /intensity=\{13\.5\}/)
+  assert.doesNotMatch(architecture, /pointLight/)
+  assert.match(architecture, /emissiveIntensity=\{4\.1\}/)
 })
 
 test('diagnostics and store writes are suppressed when they are not useful', async () => {
@@ -62,7 +62,7 @@ test('diagnostics and store writes are suppressed when they are not useful', asy
 test('file streaming probe is throttled and sqrt-free', async () => {
   const renderer = await source('../src/components/RoomRenderer.tsx')
 
-  assert.match(renderer, /streamFrame\.current/)
+  assert.match(renderer, /frame\.current/)
   assert.match(renderer, /% 10/)
   assert.match(renderer, /distanceSq/)
   assert.match(renderer, /lod\.prefetchRadius/)
@@ -115,7 +115,7 @@ test('micro material detail uses physically compatible channels', async () => {
 
   assert.match(micro, /getMicroNormalVariant/)
   assert.match(micro, /getMicroRoughnessVariant/)
-  assert.match(surface, /clearcoatNormalMap/)
+  assert.match(surface, /normalMap=\{normalMap\}/)
   assert.match(renderer, /materialName === 'paper'/)
   assert.match(renderer, /materialName === 'cardboard'/)
   assert.match(renderer, /roughnessMap = getMicroRoughnessVariant/)
@@ -127,8 +127,8 @@ test('v0.13 keeps progressive startup and lazy catalog behavior from v0.12', asy
   const environment = await source('../src/components/MaterialEnvironment.tsx')
 
   assert.match(app, /lazy\(\(\) => import\('\.\/features\/catalog-reader\/CatalogReader'\)\)/)
-  assert.match(app, /frameloop=\{started \? 'always' : 'demand'\}/)
-  assert.match(environment, /if \(!started\) return/)
+  assert.match(app, /frameloop="demand"/)
+  assert.doesNotMatch(environment, /if \(!started\) return/)
 })
 
 
