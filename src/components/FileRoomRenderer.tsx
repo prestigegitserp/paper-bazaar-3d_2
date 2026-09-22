@@ -1,5 +1,5 @@
 import { useGLTF } from '@react-three/drei'
-import { useThree, type ThreeEvent } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import {
   InstancedMesh,
@@ -48,8 +48,6 @@ export function preloadFileRoom(url: string) {
 
 function PointHotspot({ position, interaction }: { position: readonly [number, number, number]; interaction: Interaction }) {
   const meshRef = useRef<Mesh>(null)
-  const setSelected = useAppStore((state) => state.setSelected)
-  const setNearby = useAppStore((state) => state.setNearby)
 
   useEffect(() => {
     const mesh = meshRef.current
@@ -62,17 +60,6 @@ function PointHotspot({ position, interaction }: { position: readonly [number, n
       ref={meshRef}
       position={position as [number, number, number]}
       userData={{ interaction }}
-      onClick={(event) => {
-        event.stopPropagation()
-        if (!document.pointerLockElement) setSelected(interaction)
-      }}
-      onPointerOver={(event) => {
-        event.stopPropagation()
-        if (!document.pointerLockElement) setNearby(interaction)
-      }}
-      onPointerOut={() => {
-        if (!document.pointerLockElement) setNearby(null)
-      }}
     >
       <sphereGeometry args={[0.42, 10, 10]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
@@ -522,21 +509,6 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
       <primitive
         object={scene}
         scale={scale}
-        onClick={(event: ThreeEvent<MouseEvent>) => {
-          const interaction = interactionFromObject(event.object)
-          if (!interaction || document.pointerLockElement) return
-          event.stopPropagation()
-          setSelected(interaction)
-        }}
-        onPointerOver={(event: ThreeEvent<PointerEvent>) => {
-          const interaction = interactionFromObject(event.object)
-          if (!interaction || document.pointerLockElement) return
-          event.stopPropagation()
-          setNearby(interaction)
-        }}
-        onPointerOut={() => {
-          if (!document.pointerLockElement) setNearby(null)
-        }}
       />
 
       <group scale={scale}>
