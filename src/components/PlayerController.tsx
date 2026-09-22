@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { buildWorldColliders, isPositionBlocked } from '../engine/collision'
 import { interactionFromObject, interactionKey } from '../engine/interactions'
 import { getInteractionTargets } from '../engine/interactionTargets'
-import { noteInteractionRaycast } from '../engine/runtimeMetrics'
+import { noteInteractionOcclusionRaycast, noteInteractionRaycast } from '../engine/runtimeMetrics'
 import {
   consumeMobileLook,
   consumeMobileZoom,
@@ -104,6 +104,7 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
     if (!interaction) return null
 
     RAYCASTER.far = Math.max(0, targetHit.distance - 0.012)
+    noteInteractionOcclusionRaycast()
     const blocker = RAYCASTER.intersectObjects(scene.children, true)[0]
     RAYCASTER.far = INTERACTION_DISTANCE
     if (blocker) return null
