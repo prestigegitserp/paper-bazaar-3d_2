@@ -1,10 +1,15 @@
 export type RoomRuntimeMode = 'proxy' | 'procedural-detail' | 'file-detail'
 
 let interactionRaycasts = 0
+let interactionOcclusionRaycasts = 0
 const roomModes = new Map<string, RoomRuntimeMode>()
 
 export function noteInteractionRaycast() {
   interactionRaycasts += 1
+}
+
+export function noteInteractionOcclusionRaycast() {
+  interactionOcclusionRaycasts += 1
 }
 
 export function setRoomRuntimeMode(roomId: string, mode: RoomRuntimeMode) {
@@ -28,6 +33,7 @@ export function readRuntimeMetrics() {
 
   return {
     interactionRaycasts,
+    interactionOcclusionRaycasts,
     proxyRooms,
     detailedRooms,
     fileRooms
