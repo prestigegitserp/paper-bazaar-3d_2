@@ -25,13 +25,10 @@ import {
 } from '../scene/materials/pbrTextureCache'
 import {
   getMicroAlbedoVariant,
-  getMicroBumpScale,
-  getMicroBumpVariant,
   getMicroNormalScale,
   getMicroNormalVariant,
   getMicroRoughnessVariant
 } from '../scene/materials/microDetailTextures'
-import { preferredPbrResolution } from '../scene/materials/textureQuality'
 import { warmPbrTextureSet } from '../scene/materials/textureUploadScheduler'
 import { useAppStore, type RenderQuality } from '../store'
 import { resolveHotspotInteraction } from '../world/hotspots'
@@ -75,22 +72,23 @@ function PointHotspot({ position, interaction }: { position: readonly [number, n
 }
 
 function applyAuthoredMicroDetail(
-  material: MeshPhysicalMaterial,
+  material: MeshStandardMaterial,
   materialName: string,
   anisotropy: number
 ) {
   if (materialName === 'paper') {
     material.map = getMicroAlbedoVariant('paper-white', [1.4, 1.4], anisotropy)
-    material.bumpMap = getMicroBumpVariant('paper-white', [1.4, 1.4], anisotropy)
-    material.bumpScale = getMicroBumpScale('paper-white')
+    material.normalMap = getMicroNormalVariant('paper-white', [1.4, 1.4], anisotropy)
+    material.normalScale = new Vector2(getMicroNormalScale('paper-white'), getMicroNormalScale('paper-white'))
     material.roughnessMap = getMicroRoughnessVariant('paper-white', [1.4, 1.4], anisotropy)
     return
   }
 
   if (materialName === 'cardboard') {
     material.map = getMicroAlbedoVariant('paper-cream', [1.1, 1.1], anisotropy)
-    material.bumpMap = getMicroBumpVariant('paper-cream', [1.1, 1.1], anisotropy)
-    material.bumpScale = getMicroBumpScale('paper-cream') * 1.35
+    material.normalMap = getMicroNormalVariant('paper-cream', [1.1, 1.1], anisotropy)
+    const scale = getMicroNormalScale('paper-cream') * 1.2
+    material.normalScale = new Vector2(scale, scale)
     material.roughnessMap = getMicroRoughnessVariant('paper-cream', [1.1, 1.1], anisotropy)
     return
   }
@@ -103,11 +101,12 @@ function applyAuthoredMicroDetail(
         ? 'mall-metal'
         : null
 
-  if (!surface || material.clearcoat <= 0) return
+  if (!surface) return
   const repeat: [number, number] = materialName === 'floor' ? [2.6, 4.2] : materialName === 'wood' ? [2.2, 2.2] : [5, 5]
-  material.clearcoatNormalMap = getMicroNormalVariant(surface, repeat, anisotropy)
+  material.normalMap = getMicroNormalVariant(surface, repeat, anisotropy)
   const scale = getMicroNormalScale(surface)
-  material.clearcoatNormalScale = new Vector2(scale, scale)
+  material.normalScale = new Vector2(scale, scale)
+  material.roughnessMap = getMicroRoughnessVariant(surface, repeat, anisotropy)
 }
 
 function upgradeAuthoredMaterial(
@@ -118,7 +117,24 @@ function upgradeAuthoredMaterial(
 ) {
   if (!(material instanceof MeshStandardMaterial)) return material.clone()
 
-  const physical = new MeshPhysicalMaterial({
+  if (material.name === 'glass' && quality === 'cinematic') {
+    const glass = new MeshPhysicalMaterial({
+      name: material.name,
+      color: '#dcebed',
+      roughness: 0.09,
+      metalness: 0,
+      transmission: 0.82,
+      thickness: 0.06,
+      ior: 1.45,
+      transparent: true,
+      opacity: 1,
+      depthWrite: false
+    })
+    glass.envMapIntensity = 1.15 * environmentIntensity
+    return glass
+  }
+
+  const standard = new MeshStandardMaterial({
     name: material.name,
     color: material.color.clone(),
     emissive: material.emissive.clone(),
@@ -130,66 +146,56 @@ function upgradeAuthoredMaterial(
     opacity: material.opacity,
     alphaTest: material.alphaTest
   })
-  physical.envMapIntensity = quality === 'cinematic' ? 1.05 : 0.72
 
   switch (material.name) {
     case 'glass':
-      physical.color.set('#dcebed')
-      physical.roughness = 0.065
-      physical.metalness = 0
-      physical.transmission = quality === 'cinematic' ? 0.88 : 0.55
-      physical.thickness = 0.085
-      physical.ior = 1.46
-      physical.clearcoat = 0.2
-      physical.clearcoatRoughness = 0.1
-      physical.transparent = true
-      physical.opacity = quality === 'cinematic' ? 0.98 : 0.76
-      physical.depthWrite = false
-      physical.envMapIntensity = 1.35
+      standard.color.set('#b9cdcf')
+      standard.roughness = 0.18
+      standard.metalness = 0.04
+      standard.transparent = true
+      standard.opacity = 0.18
+      standard.depthWrite = false
+      standard.envMapIntensity = 0.9
       break
     case 'floor':
-      physical.roughness = 0.32
-      physical.metalness = 0.015
-      physical.clearcoat = quality === 'cinematic' ? 0.3 : 0.12
-      physical.clearcoatRoughness = 0.22
-      physical.envMapIntensity = 1.25
+      standard.roughness = 0.34
+      standard.metalness = 0.01
+      standard.envMapIntensity = 1.0
       break
     case 'metal':
     case 'silver':
-      physical.roughness = material.name === 'silver' ? 0.22 : 0.31
-      physical.metalness = 0.84
-      physical.clearcoat = 0.1
-      physical.clearcoatRoughness = 0.24
-      physical.anisotropy = quality === 'cinematic' ? 0.42 : 0.17
-      physical.envMapIntensity = 1.5
+      standard.roughness = material.name === 'silver' ? 0.25 : 0.34
+      standard.metalness = 0.82
+      standard.envMapIntensity = 1.18
       break
     case 'wood':
-      physical.roughness = 0.5
-      physical.clearcoat = 0.09
-      physical.clearcoatRoughness = 0.48
-      physical.envMapIntensity = 0.86
+      standard.roughness = 0.52
+      standard.metalness = 0
+      standard.envMapIntensity = 0.78
       break
     case 'paper':
-      physical.roughness = 0.91
-      physical.metalness = 0
-      physical.envMapIntensity = 0.36
+      standard.roughness = 0.92
+      standard.metalness = 0
+      standard.envMapIntensity = 0.32
       break
     case 'plaster':
-      physical.roughness = 0.7
-      physical.envMapIntensity = 0.54
+      standard.roughness = 0.72
+      standard.metalness = 0
+      standard.envMapIntensity = 0.48
       break
     case 'cardboard':
-      physical.roughness = 0.9
-      physical.envMapIntensity = 0.36
+      standard.roughness = 0.91
+      standard.metalness = 0
+      standard.envMapIntensity = 0.32
       break
     default:
-      physical.roughness = Math.max(0.42, physical.roughness)
-      physical.clearcoat = quality === 'cinematic' ? 0.045 : 0
+      standard.roughness = Math.max(0.44, standard.roughness)
+      standard.envMapIntensity = 0.72
   }
 
-  physical.envMapIntensity *= environmentIntensity
-  applyAuthoredMicroDetail(physical, material.name, detailAnisotropy)
-  return physical
+  standard.envMapIntensity *= environmentIntensity
+  applyAuthoredMicroDetail(standard, material.name, detailAnisotropy)
+  return standard
 }
 
 function attachNodeInteractions(
@@ -388,10 +394,11 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
   const setSelected = useAppStore((state) => state.setSelected)
   const setNearby = useAppStore((state) => state.setNearby)
   const quality = useAppStore((state) => state.quality)
+  const performanceCurrent = useThree((state) => state.performance.current)
   const presentation = getAssetPresentationProfile(room)
   const detailAnisotropy = quality === 'cinematic'
-    ? Math.min(8, gl.capabilities.getMaxAnisotropy())
-    : Math.min(4, gl.capabilities.getMaxAnisotropy())
+    ? Math.min(4, gl.capabilities.getMaxAnisotropy())
+    : Math.min(2, gl.capabilities.getMaxAnisotropy())
 
   const scene = useMemo(() => {
     const clone = gltf.scene.clone(true)
@@ -418,19 +425,27 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
         // Material colors and micro detail remain as the offline-safe fallback.
       })
 
+    return () => {
+      active = false
+    }
+  }, [gl, invalidate, room.asset, scene])
+
+  useEffect(() => {
+    const authored = room.asset.kind === 'gltf' && room.asset.source === 'authored'
+    if (!authored || quality !== 'cinematic' || performanceCurrent < 0.97) return
+
+    let active = true
     const leases: PbrTextureLease[] = []
     const sets = new Map<string, PbrTextureSet>()
-    const resolution = preferredPbrResolution(quality, true)
 
     const tasks = Object.entries(presentation.materialBindings).map(async ([materialName, binding]) => {
-
       if (!binding) return
       const lease = await acquirePbrTextureSet(binding.surface, {
         repeat: binding.repeat,
         anisotropy: detailAnisotropy,
-        full: quality === 'cinematic',
-        priority: 'normal',
-        resolution
+        full: true,
+        priority: 'background',
+        resolution: '1k'
       })
       if (!lease) return
 
@@ -463,7 +478,7 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
         }
       })
       .catch(() => {
-        // Authored material colors remain as a safe fallback.
+        // The shared atlas remains the stable fallback.
       })
 
     return () => {
@@ -471,7 +486,7 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
       for (const lease of leases.splice(0)) releasePbrTextureSet(lease)
       sets.clear()
     }
-  }, [detailAnisotropy, gl, invalidate, presentation, quality, room.asset, scene])
+  }, [detailAnisotropy, gl, invalidate, performanceCurrent, presentation, quality, room.asset, scene])
 
   useEffect(() => {
     if (quality !== 'cinematic') return
