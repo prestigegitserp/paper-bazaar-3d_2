@@ -22,8 +22,6 @@ import { getSurfacePhysicalProfile } from './surfacePhysicalProfiles'
 import { preferredPbrResolution } from './textureQuality'
 import { warmPbrTextureSet } from './textureUploadScheduler'
 import {
-  getMicroBumpScale,
-  getMicroBumpVariant,
   getMicroNormalScale,
   getMicroNormalVariant,
   getMicroRoughnessVariant
@@ -51,7 +49,8 @@ function usePbrPhase(
   hasPbr: boolean,
   quality: 'cinematic' | 'balanced',
   started: boolean,
-  loadPriority: LoadPriority
+  loadPriority: LoadPriority,
+  allowFullUpgrade: boolean
 ) {
   const [phase, setPhase] = useState<PbrPhase>(
     hasPbr && loadPriority === 'critical' ? 'albedo' : 'fallback'
@@ -63,6 +62,8 @@ function usePbrPhase(
       return
     }
 
+    if (phase === 'full') return
+
     const idleWindow = window as IdleWindow
     let albedoTimer: number | null = null
     let fullTimer: number | null = null
@@ -70,22 +71,31 @@ function usePbrPhase(
     let cancelled = false
 
     const scheduleFull = () => {
-      if (quality !== 'cinematic') return
+      if (quality !== 'cinematic' || !allowFullUpgrade) return
       const upgrade = () => {
         if (!cancelled) setPhase('full')
       }
 
       if (idleWindow.requestIdleCallback) {
-        idleId = idleWindow.requestIdleCallback(upgrade, { timeout: 1500 })
+        idleId = idleWindow.requestIdleCallback(upgrade, { timeout: 1800 })
       } else {
-        fullTimer = window.setTimeout(upgrade, 700)
+        fullTimer = window.setTimeout(upgrade, 900)
       }
     }
 
     if (!started) {
-      setPhase(loadPriority === 'critical' ? 'albedo' : 'fallback')
+      if (phase !== 'albedo' && loadPriority === 'critical') setPhase('albedo')
       return () => {
         cancelled = true
+      }
+    }
+
+    if (phase === 'albedo') {
+      scheduleFull()
+      return () => {
+        cancelled = true
+        if (fullTimer !== null) window.clearTimeout(fullTimer)
+        if (idleId !== null) idleWindow.cancelIdleCallback?.(idleId)
       }
     }
 
@@ -93,7 +103,6 @@ function usePbrPhase(
     albedoTimer = window.setTimeout(() => {
       if (cancelled) return
       setPhase('albedo')
-      scheduleFull()
     }, delay)
 
     return () => {
@@ -102,7 +111,7 @@ function usePbrPhase(
       if (fullTimer !== null) window.clearTimeout(fullTimer)
       if (idleId !== null) idleWindow.cancelIdleCallback?.(idleId)
     }
-  }, [hasPbr, loadPriority, quality, started, surface])
+  }, [allowFullUpgrade, hasPbr, loadPriority, phase, quality, started, surface])
 
   return phase
 }
@@ -133,6 +142,7 @@ export default function SurfaceMaterial({
   const quality = useAppStore((state) => state.quality)
   const started = useAppStore((state) => state.started)
   const gl = useThree((state) => state.gl)
+  const performanceCurrent = useThree((state) => state.performance.current)
   const preset = getSurfacePreset(surface)
   const physical = getSurfacePhysicalProfile(surface)
   const pbrAsset = getPbrSurfaceAsset(surface)
@@ -141,7 +151,8 @@ export default function SurfaceMaterial({
     Boolean(pbrAsset),
     quality,
     started,
-    loadPriority
+    loadPriority,
+    performanceCurrent > 0.97
   )
   const resolution = phase === 'full'
     ? preferredPbrResolution(quality, allowHighResolution)
@@ -149,22 +160,16 @@ export default function SurfaceMaterial({
 
   const [loadedPbr, setLoadedPbr] = useState<PbrTextureSet | null>(null)
   const textureAnisotropy = quality === 'cinematic'
-    ? Math.min(8, gl.capabilities.getMaxAnisotropy())
-    : Math.min(4, gl.capabilities.getMaxAnisotropy())
+    ? Math.min(6, gl.capabilities.getMaxAnisotropy())
+    : Math.min(3, gl.capabilities.getMaxAnisotropy())
 
   const fallback = useMemo(
     () => getSurfaceTextureVariant(surface, repeat, textureAnisotropy),
     [repeat[0], repeat[1], surface, textureAnisotropy]
   )
-  const microBump = useMemo(
-    () => getMicroBumpVariant(surface, repeat, textureAnisotropy),
+  const microNormal = useMemo(
+    () => getMicroNormalVariant(surface, repeat, textureAnisotropy),
     [repeat[0], repeat[1], surface, textureAnisotropy]
-  )
-  const clearcoatNormal = useMemo(
-    () => physical.clearcoat >= 0.07
-      ? getMicroNormalVariant(surface, repeat, textureAnisotropy)
-      : undefined,
-    [physical.clearcoat, repeat[0], repeat[1], surface, textureAnisotropy]
   )
   const microRoughness = useMemo(
     () => getMicroRoughnessVariant(surface, repeat, textureAnisotropy),
@@ -237,32 +242,22 @@ export default function SurfaceMaterial({
   ])
 
   const map = loadedPbr?.map ?? fallback.map
-  const baseNormalScale = pbrAsset?.normalScale ?? 0.5
-  const normalScale = loadedPbr?.normalMap
-    ? new Vector2(
-        baseNormalScale * physical.normalScaleMultiplier,
-        baseNormalScale * physical.normalScaleMultiplier
-      )
-    : undefined
+  const normalMap = loadedPbr?.normalMap ?? microNormal
+  const baseNormalScale = loadedPbr?.normalMap
+    ? (pbrAsset?.normalScale ?? 0.5) * physical.normalScaleMultiplier
+    : getMicroNormalScale(surface)
   const roughnessMap = loadedPbr?.roughnessMap ?? microRoughness
 
   return (
-    <meshPhysicalMaterial
+    <meshStandardMaterial
       color={color ? new Color(color) : undefined}
       map={map}
-      bumpMap={loadedPbr?.normalMap ? undefined : loadedPbr ? microBump : fallback.bump}
-      bumpScale={loadedPbr?.normalMap ? 0 : loadedPbr ? getMicroBumpScale(surface) : preset.bumpScale}
-      normalMap={loadedPbr?.normalMap}
-      normalScale={normalScale}
+      normalMap={normalMap}
+      normalScale={new Vector2(baseNormalScale, baseNormalScale)}
       roughnessMap={roughnessMap}
       roughness={preset.roughness}
       metalness={preset.metalness}
-      clearcoat={quality === 'cinematic' ? physical.clearcoat : physical.clearcoat * 0.45}
-      clearcoatRoughness={physical.clearcoatRoughness}
-      clearcoatNormalMap={quality === 'cinematic' ? clearcoatNormal : undefined}
-      clearcoatNormalScale={clearcoatNormal ? new Vector2(getMicroNormalScale(surface), getMicroNormalScale(surface)) : undefined}
       envMapIntensity={physical.envMapIntensity}
-      anisotropy={quality === 'cinematic' ? physical.anisotropy : physical.anisotropy * 0.45}
       emissive={emissive}
       emissiveIntensity={emissiveIntensity}
       side={side}
