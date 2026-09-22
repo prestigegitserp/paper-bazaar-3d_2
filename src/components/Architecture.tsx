@@ -2,7 +2,6 @@ import { Instance, Instances } from '@react-three/drei'
 import { useMemo } from 'react'
 import WorldTextPanel from './WorldTextPanel'
 import SurfaceMaterial from '../scene/materials/SurfaceMaterial'
-import { useAppStore } from '../store'
 
 const MARKET_LENGTH = 39.6
 const AISLE_WIDTH = 5.7
@@ -22,14 +21,12 @@ function TiledFloor() {
 
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.011, 0]}>
         <planeGeometry args={[AISLE_WIDTH, 38.8]} />
-        <meshPhysicalMaterial
+        <meshStandardMaterial
           color="#f4f4f0"
-          roughness={0.24}
-          metalness={0.015}
-          clearcoat={0.22}
-          clearcoatRoughness={0.2}
+          roughness={0.38}
+          metalness={0.01}
           transparent
-          opacity={0.16}
+          opacity={0.11}
           depthWrite={false}
         />
       </mesh>
@@ -41,7 +38,6 @@ function CeilingSystem() {
   const panels = useMemo(() => Array.from({ length: 13 }, (_, index) => -18 + index * 3), [])
   const evenPanels = useMemo(() => panels.filter((_, index) => index % 2 === 0), [panels])
   const oddPanels = useMemo(() => panels.filter((_, index) => index % 2 === 1), [panels])
-  const realLights = useMemo(() => panels.filter((_, index) => index % 3 === 0), [panels])
 
   return (
     <>
@@ -77,17 +73,6 @@ function CeilingSystem() {
         />
         {panels.map((z) => <Instance key={z} position={[0, 4.82, z]} />)}
       </Instances>
-
-      {realLights.map((z) => (
-        <pointLight
-          key={z}
-          position={[0, 4.42, z]}
-          color="#fff5df"
-          intensity={13.5}
-          distance={11.5}
-          decay={2}
-        />
-      ))}
 
       {[-2.72, 2.72].map((x) => (
         <mesh key={x} position={[x, 4.84, 0]}>
@@ -152,14 +137,11 @@ function GlassBay({ x, z, rotationY, label, accent }: {
       {[-1.31, 1.31].map((zFrame) => (
         <mesh key={zFrame} position={[2.74, 1.72, zFrame]}>
           <boxGeometry args={[0.1, 3.45, 0.08]} />
-          <meshPhysicalMaterial
+          <meshStandardMaterial
             color="#24282b"
-            metalness={0.82}
-            roughness={0.28}
-            clearcoat={0.08}
-            clearcoatRoughness={0.24}
-            envMapIntensity={1.45}
-            anisotropy={0.32}
+            metalness={0.78}
+            roughness={0.31}
+            envMapIntensity={1.05}
           />
         </mesh>
       ))}
@@ -259,8 +241,6 @@ function HeritageAccent() {
 }
 
 export default function Architecture() {
-  const quality = useAppStore((state) => state.quality)
-
   return (
     <>
       <TiledFloor />
@@ -296,29 +276,6 @@ export default function Architecture() {
       <CeilingSystem />
       <ColumnSystem />
       <HeritageAccent />
-
-      {quality === 'cinematic' && (
-        <>
-          <spotLight
-            position={[-1.9, 4.6, 7.3]}
-            target-position={[-5.2, 1.7, 7.5]}
-            color="#fff0d9"
-            intensity={10}
-            distance={9}
-            angle={0.58}
-            penumbra={0.92}
-          />
-          <spotLight
-            position={[1.9, 4.6, -3]}
-            target-position={[5.2, 1.7, -3]}
-            color="#f2f7ff"
-            intensity={9}
-            distance={9}
-            angle={0.58}
-            penumbra={0.92}
-          />
-        </>
-      )}
 
       <GlassBay x={-5.35} z={-8.25} rotationY={0} label="انبار کاغذ و مقوا" accent="#75886f" />
       <GlassBay x={5.35} z={-8.25} rotationY={Math.PI} label="صحافی و ملزومات" accent="#6b7e88" />
