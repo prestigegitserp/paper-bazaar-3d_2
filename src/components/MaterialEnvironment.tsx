@@ -17,11 +17,8 @@ export default function MaterialEnvironment() {
   const scene = useThree((state) => state.scene)
   const invalidate = useThree((state) => state.invalidate)
   const quality = useAppStore((state) => state.quality)
-  const started = useAppStore((state) => state.started)
 
   useEffect(() => {
-    if (!started) return
-
     const idleWindow = window as IdleWindow
     let disposed = false
     let target: ReturnType<PMREMGenerator['fromScene']> | null = null
@@ -48,9 +45,9 @@ export default function MaterialEnvironment() {
     }
 
     if (idleWindow.requestIdleCallback) {
-      idleId = idleWindow.requestIdleCallback(buildEnvironment, { timeout: 1200 })
+      idleId = idleWindow.requestIdleCallback(buildEnvironment, { timeout: 650 })
     } else {
-      timer = window.setTimeout(buildEnvironment, 180)
+      timer = window.setTimeout(buildEnvironment, 80)
     }
 
     return () => {
@@ -62,13 +59,12 @@ export default function MaterialEnvironment() {
       pmrem?.dispose()
       invalidate()
     }
-  }, [gl, invalidate, scene, started])
+  }, [gl, invalidate, scene])
 
   useEffect(() => {
-    if (!started) return
     scene.environmentIntensity = quality === 'cinematic' ? 0.82 : 0.58
     invalidate()
-  }, [invalidate, quality, scene, started])
+  }, [invalidate, quality, scene])
 
   return null
 }
