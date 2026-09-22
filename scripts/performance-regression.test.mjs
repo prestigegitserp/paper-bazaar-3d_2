@@ -19,11 +19,12 @@ test('intro rendering defers expensive continuous and shadow work', async () => 
   const effects = await source('../src/components/ExperienceEffects.tsx')
   const environment = await source('../src/components/MaterialEnvironment.tsx')
 
-  assert.match(app, /frameloop=\{started \? 'always' : 'demand'\}/)
+  assert.match(app, /frameloop="demand"/)
   assert.match(app, /shadows=\{started && quality === 'cinematic'\}/)
-  assert.match(mall, /started && <FloorImperfections/)
-  assert.match(effects, /started && quality === 'cinematic'/)
-  assert.match(environment, /if \(!started\) return/)
+  assert.doesNotMatch(mall, /FloorImperfections/)
+  assert.doesNotMatch(effects, /SoftShadows|AdaptiveDpr/)
+  assert.doesNotMatch(environment, /if \(!started\) return/)
+  assert.match(environment, /requestIdleCallback/)
 })
 
 test('file-backed rooms use distance prefetch and local Suspense fallback', async () => {
@@ -37,7 +38,7 @@ test('file-backed rooms use distance prefetch and local Suspense fallback', asyn
   assert.match(renderer, /preloadFileRoom/)
   assert.match(fileRenderer, /useGLTF\.preload/)
   assert.match(renderer, /Suspense fallback=\{<ProceduralRoomProxy/)
-  assert.match(renderer, /useProgressiveFileAsset/)
+  assert.match(renderer, /useRoomRuntime/)
 })
 
 test('authored repeated meshes are batched without touching semantic hotspots', async () => {
@@ -73,5 +74,5 @@ test('v0.12 keeps the v0.11 authored asset and realism pipeline intact', async (
   assert.match(assets, /authored:hero-wholesale:v1/)
   assert.match(generator, /TEXCOORD_0/)
   assert.match(generator, /RoundedBoxGeometry/)
-  assert.match(material, /meshPhysicalMaterial/)
+  assert.match(material, /meshStandardMaterial/)
 })
