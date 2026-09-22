@@ -508,7 +508,7 @@ export default function HUD() {
       <div className="topbar">
         <div className="brand-lockup">
           <div className="brand-mark">P3</div>
-          <div><strong>Paper Bazaar 3D</strong><span>Production market · v0.16</span></div>
+          <div><strong>Paper Bazaar 3D</strong><span>Root performance · v0.17</span></div>
         </div>
 
         <div className="top-actions">
@@ -592,15 +592,15 @@ export default function HUD() {
       {!started && (
         <div className="intro-overlay">
           <div className="intro-card">
-            <div className="intro-eyebrow">PRODUCTION ART PASS · v0.16.0</div>
+            <div className="intro-eyebrow">ROOT PERFORMANCE + BAKED REALISM · v0.17.0</div>
             <h1>راسته‌ی سه‌بعدی<br /><span>کاغذفروشان بازار تهران</span></h1>
-            <p>v0.16 یک بازسازی هنری/فنی است: سه Hero Shop متفاوت با چیدمان عمده‌فروشی، بسته‌بندی و استودیوی نمونه؛ متریال‌اتلس فشرده، نورپردازی موضعی، wear و signage مستقل، و streaming profile-driven. معماری جدید اجازه می‌دهد بعداً GLB، اسکن LiDAR/photogrammetry، تعداد غرفه یا حتی کل texture set بدون تغییر business layer جایگزین شود.</p>
+            <p>v0.17 یک جراحی ریشه‌ای performance است: کل صحنه demand-rendered شده، raycast دو مرحله‌ای فقط targetهای واقعی را بررسی می‌کند، نورهای realtime و shaderهای Physical غیرضروری حذف شده‌اند و Hero Shopها به‌جای هزینه‌ی بیشتر GPU، baked vertex lighting دارند. معماری scan/asset/profile نسخه 0.16 کاملاً حفظ شده است.</p>
             <div className="intro-features">
-              <span>3 distinct Hero Shops</span>
-              <span>KTX2 material atlas</span>
-              <span>Production light profiles</span>
-              <span>Scan-ready asset registry</span>
-              <span>v0.15 interaction runtime preserved</span>
+              <span>Demand-only render loop</span>
+              <span>Two-stage interaction raycast</span>
+              <span>Standard-first PBR</span>
+              <span>Baked Hero lighting</span>
+              <span>Scan-ready asset registry preserved</span>
             </div>
             <button className="enter-button" onClick={enter}>ورود به بازار <b>↵</b></button>
             <small>دسکتاپ: WASD + Mouse + Wheel · موبایل: Joystick + Look pad + Pinch/±.</small>
