@@ -348,7 +348,10 @@ function DebugPanel() {
       <div><span>textures</span><b>{diagnostics.textures}</b></div>
       <div><span>fps</span><b>{diagnostics.fps.toFixed(1)}</b></div>
       <div><span>frame ms</span><b>{diagnostics.frameMs.toFixed(1)}</b></div>
-      <div><span>raycasts/s</span><b>{diagnostics.raycastsPerSecond.toFixed(1)}</b></div>
+      <div><span>target scans/s</span><b>{diagnostics.raycastsPerSecond.toFixed(1)}</b></div>
+      <div><span>occlusion scans/s</span><b>{diagnostics.occlusionRaycastsPerSecond.toFixed(1)}</b></div>
+      <div><span>interaction targets</span><b>{diagnostics.interactionTargets}</b></div>
+      <div><span>pixel ratio</span><b>{diagnostics.pixelRatio.toFixed(2)}</b></div>
       <div><span>room budget</span><b>{diagnostics.proxyRooms}P · {diagnostics.detailedRooms}D · {diagnostics.fileRooms}F</b></div>
       <div><span>visited</span><b>{visitedRoomIds.length}/{world.rooms.length}</b></div>
       <div><span>asset errors</span><b>{Object.keys(assetErrors).length}</b></div>
