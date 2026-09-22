@@ -5,6 +5,7 @@ import {
   BoxGeometry,
   CylinderGeometry,
   Euler,
+  Float32BufferAttribute,
   PlaneGeometry,
   Quaternion,
   TorusGeometry
@@ -35,6 +36,38 @@ const SHAPES = {
   plane: new PlaneGeometry(1, 1),
   torus: new TorusGeometry(0.5, 0.12, 12, 24)
 }
+
+function bakeVertexLighting(geometry) {
+  geometry.computeBoundingBox()
+  const position = geometry.getAttribute('position')
+  const normal = geometry.getAttribute('normal')
+  const box = geometry.boundingBox
+  if (!position || !normal || !box) return
+
+  const height = Math.max(0.0001, box.max.y - box.min.y)
+  const colors = new Float32Array(position.count * 3)
+
+  for (let index = 0; index < position.count; index += 1) {
+    const y = position.getY(index)
+    const ny = normal.getY(index)
+    const nx = normal.getX(index)
+    const nz = normal.getZ(index)
+    const vertical = (y - box.min.y) / height
+    const upwardBounce = Math.max(0, ny) * 0.08
+    const downwardOcclusion = Math.max(0, -ny) * 0.16
+    const sideFalloff = (Math.abs(nx) + Math.abs(nz)) * 0.018
+    const floorBounce = vertical * 0.055
+    const brightness = Math.max(0.68, Math.min(1, 0.84 + upwardBounce - downwardOcclusion - sideFalloff + floorBounce))
+
+    colors[index * 3] = brightness
+    colors[index * 3 + 1] = brightness * 0.985
+    colors[index * 3 + 2] = brightness * 0.95
+  }
+
+  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3))
+}
+
+for (const geometry of Object.values(SHAPES)) bakeVertexLighting(geometry)
 
 function pad4(value) {
   return (value + 3) & ~3
@@ -437,6 +470,7 @@ function serializeGeometries(geometries) {
       POSITION: pushAttribute(position, 'POSITION'),
       NORMAL: pushAttribute(normal, 'NORMAL'),
       TEXCOORD_0: pushAttribute(uv, 'TEXCOORD_0'),
+      COLOR_0: geometry.getAttribute('color') ? pushAttribute(geometry.getAttribute('color'), 'COLOR_0') : null,
       index: geometry.index ? pushIndex(geometry.index) : null
     })
   }
@@ -469,7 +503,8 @@ export function buildAuthoredShopGlb(variant = 'wholesale') {
         attributes: {
           POSITION: geometry.POSITION,
           NORMAL: geometry.NORMAL,
-          TEXCOORD_0: geometry.TEXCOORD_0
+          TEXCOORD_0: geometry.TEXCOORD_0,
+          ...(geometry.COLOR_0 !== null ? { COLOR_0: geometry.COLOR_0 } : {})
         },
         material: materialIndex.get(materialName)
       }
@@ -496,7 +531,7 @@ export function buildAuthoredShopGlb(variant = 'wholesale') {
   const gltf = {
     asset: {
       version: '2.0',
-      generator: 'Paper Bazaar production hero generator v0.16'
+      generator: 'Paper Bazaar production hero generator v0.17'
     },
     scene: 0,
     scenes: [{ name: `Paper Bazaar Hero ${variant} v1`, nodes: nodes.map((_, index) => index) }],
