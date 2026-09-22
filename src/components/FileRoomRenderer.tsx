@@ -1,6 +1,6 @@
 import { useGLTF } from '@react-three/drei'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   InstancedMesh,
   Matrix4,
@@ -15,6 +15,7 @@ import {
 import type { Vendor } from '../domain/catalog'
 import type { Interaction } from '../domain/interaction'
 import { interactionFromObject } from '../engine/interactions'
+import { registerInteractionTarget } from '../engine/interactionTargets'
 import { resolveAssetUrl } from '../assets/resolveAssetUrl'
 import { getAssetPresentationProfile, type AssetPresentationProfile } from '../presentation/assetPresentationRegistry'
 import {
@@ -46,11 +47,19 @@ export function preloadFileRoom(url: string) {
 }
 
 function PointHotspot({ position, interaction }: { position: readonly [number, number, number]; interaction: Interaction }) {
+  const meshRef = useRef<Mesh>(null)
   const setSelected = useAppStore((state) => state.setSelected)
   const setNearby = useAppStore((state) => state.setNearby)
 
+  useEffect(() => {
+    const mesh = meshRef.current
+    if (!mesh) return
+    return registerInteractionTarget(mesh)
+  }, [interaction])
+
   return (
     <mesh
+      ref={meshRef}
       position={position as [number, number, number]}
       userData={{ interaction }}
       onClick={(event) => {
@@ -408,6 +417,16 @@ export default function FileRoomRenderer({ room, vendor, url, scale = 1 }: { roo
     }
     return clone
   }, [detailAnisotropy, gltf.scene, presentation, quality, room, vendor])
+
+  useEffect(() => {
+    const cleanups: Array<() => void> = []
+    scene.traverse((object) => {
+      if (object.userData?.interaction) cleanups.push(registerInteractionTarget(object))
+    })
+    return () => {
+      for (const cleanup of cleanups) cleanup()
+    }
+  }, [scene])
 
   useEffect(() => {
     const authored = room.asset.kind === 'gltf' && room.asset.source === 'authored'
