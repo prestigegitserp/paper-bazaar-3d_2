@@ -4,7 +4,9 @@ const targets = new Set<Object3D>()
 
 export function registerInteractionTarget(object: Object3D) {
   targets.add(object)
-  return () => targets.delete(object)
+  return () => {
+    targets.delete(object)
+  }
 }
 
 export function getInteractionTargets() {
