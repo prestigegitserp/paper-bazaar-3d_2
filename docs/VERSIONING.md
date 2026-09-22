@@ -51,7 +51,9 @@ v0.14 از snapshot پایدار `release/v0.13.0` منشعب می‌شود. ه�
 
 پس از CI و deploy موفق:
 - `main` به commit تاییدشده‌ی v0.14 منتقل می‌شود.
-- `release/v0.14.0` از همان commit ساخته می‌شود.
+- `release/v0.14.0`
+- `release/v0.15.0`
+- `release/v0.16.0` از همان commit ساخته می‌شود.
 - `release/v0.13.0` و تمام releaseهای قبل بدون تغییر باقی می‌مانند.
 
 
@@ -77,3 +79,15 @@ repository قبلی `prestigegitserp/paper-bazaar-3d` frozen است و نبای�
 - v0.16 از همان snapshot منشعب می‌شود.
 - هر release بعدی snapshot مستقل `release/vX.Y.Z` خواهد داشت.
 - `main` فقط پس از CI و Pages موفق promote می‌شود.
+
+
+## v0.17 rule
+
+v0.17 فقط از snapshot پایدار `release/v0.16.0` در repository فعال `prestigegitserp/paper-bazaar-3d_2` ساخته می‌شود.
+
+قبل از شروع v0.17 بررسی شد که branch/release قبلی v0.17 وجود ندارد. branch توسعه‌ی رسمی این milestone از v0.16 ساخته می‌شود و هیچ release قدیمی حذف یا force-update نمی‌شود.
+
+پس از CI و deploy موفق:
+- `release/v0.17.0` از commit تأییدشده ساخته می‌شود.
+- `main` به همان commit fast-forward می‌شود.
+- `release/v0.16.0` و تمام snapshotهای قبلی بدون تغییر باقی می‌مانند.
