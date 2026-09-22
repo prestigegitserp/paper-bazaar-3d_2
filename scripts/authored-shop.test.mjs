@@ -9,7 +9,7 @@ test('production hero shop emits UV-mapped beveled/cylindrical/torus GLB with se
   assert.ok(buffer.length > 20_000)
   assert.ok(buffer.length < 600_000)
   assert.equal(gltf.asset.version, '2.0')
-  assert.match(gltf.asset.generator, /v0\.16/)
+  assert.match(gltf.asset.generator, /v0\.17/)
 
   const names = new Set(gltf.nodes.map((node) => node.name))
   for (const required of [
@@ -38,7 +38,7 @@ test('production hero shop emits UV-mapped beveled/cylindrical/torus GLB with se
     assert.ok(names.has(required), `missing authored node: ${required}`)
   }
 
-  assert.ok(gltf.nodes.length >= 165, 'authored shop should retain dense detail and add v0.16 hero props')
+  assert.ok(gltf.nodes.length >= 165, 'authored shop should retain dense detail and retain dense hero props and v0.17 baked lighting')
   assert.ok(gltf.materials.some((material) => material.name === 'glass'))
 
   for (const mesh of gltf.meshes) {
@@ -47,6 +47,8 @@ test('production hero shop emits UV-mapped beveled/cylindrical/torus GLB with se
       assert.ok(Number.isInteger(primitive.attributes.NORMAL), `${mesh.name} missing NORMAL`)
       assert.ok(Number.isInteger(primitive.attributes.TEXCOORD_0), `${mesh.name} missing TEXCOORD_0`)
       assert.equal(gltf.accessors[primitive.attributes.TEXCOORD_0].type, 'VEC2')
+      assert.ok(Number.isInteger(primitive.attributes.COLOR_0), `${mesh.name} missing baked COLOR_0`)
+      assert.equal(gltf.accessors[primitive.attributes.COLOR_0].type, 'VEC3')
     }
   }
 
