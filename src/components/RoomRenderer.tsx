@@ -28,112 +28,124 @@ function fileAssetUrl(room: RoomDefinition) {
   return null
 }
 
-function useProceduralDetail(room: RoomDefinition) {
+type RoomRuntimeState = {
+  fileReady: boolean
+  fileVisible: boolean
+  proceduralDetailed: boolean
+}
+
+function useRoomRuntime(room: RoomDefinition): RoomRuntimeState {
   const started = useAppStore((state) => state.started)
-  const lod = getAssetPresentationProfile(room).lod
   const camera = useThree((state) => state.camera)
-  const [detailed, setDetailed] = useState(false)
+  const lod = getAssetPresentationProfile(room).lod
+  const url = fileAssetUrl(room)
+  const [runtime, setRuntime] = useState<RoomRuntimeState>(() => ({
+    fileReady: !url,
+    fileVisible: false,
+    proceduralDetailed: false
+  }))
+  const runtimeRef = useRef(runtime)
   const frame = useRef(0)
   const behindProbes = useRef(0)
+  const prefetchStarted = useRef(false)
   const forward = useRef(new Vector3())
   const toRoom = useRef(new Vector3())
 
   useEffect(() => {
-    setDetailed(false)
+    const reset = {
+      fileReady: !url,
+      fileVisible: false,
+      proceduralDetailed: false
+    }
+    runtimeRef.current = reset
+    setRuntime(reset)
     frame.current = 0
     behindProbes.current = 0
-  }, [room.asset.assetId, room.asset.version])
-
-  useFrame(() => {
-    if (room.asset.kind !== 'procedural') return
-
-    if (!started) {
-      behindProbes.current = 0
-      if (detailed) setDetailed(false)
-      return
-    }
-
-    frame.current = (frame.current + 1) % 12
-    if (frame.current !== 0) return
-
-    const state = useAppStore.getState()
-    if (state.activeRoomId === room.id) {
-      behindProbes.current = 0
-      if (!detailed) setDetailed(true)
-      return
-    }
-
-    const dx = state.player.x - room.position[0]
-    const dz = state.player.z - room.position[2]
-    const distanceSq = dx * dx + dz * dz
-    const forceRadiusSq = lod.forceDetailRadius * lod.forceDetailRadius
-    const wakeRadiusSq = lod.proceduralWakeRadius * lod.proceduralWakeRadius
-    const sleepRadiusSq = lod.proceduralSleepRadius * lod.proceduralSleepRadius
-
-    toRoom.current.set(room.position[0] - camera.position.x, 0, room.position[2] - camera.position.z)
-    const toRoomLengthSq = toRoom.current.lengthSq()
-    const viewDot = toRoomLengthSq > 0.0001
-      ? camera.getWorldDirection(forward.current).setY(0).normalize().dot(toRoom.current.normalize())
-      : 1
-
-    if (!detailed) {
-      if (
-        distanceSq <= forceRadiusSq
-        || (distanceSq <= wakeRadiusSq && viewDot >= lod.viewWakeDot)
-      ) {
-        behindProbes.current = 0
-        setDetailed(true)
-      }
-      return
-    }
-
-    if (distanceSq >= sleepRadiusSq) {
-      behindProbes.current = 0
-      setDetailed(false)
-      return
-    }
-
-    if (distanceSq > forceRadiusSq && viewDot <= lod.viewSleepDot) {
-      behindProbes.current += 1
-      if (behindProbes.current >= PROCEDURAL_BEHIND_PROBES) {
-        behindProbes.current = 0
-        setDetailed(false)
-      }
-      return
-    }
-
-    behindProbes.current = 0
-  })
-
-  return detailed
-}
-
-function useProgressiveFileAsset(room: RoomDefinition) {
-  const started = useAppStore((state) => state.started)
-  const lod = getAssetPresentationProfile(room).lod
-  const url = fileAssetUrl(room)
-  const [ready, setReady] = useState(() => !url)
-  const [visible, setVisible] = useState(false)
-  const prefetchStarted = useRef(false)
-  const streamFrame = useRef(0)
-
-  useEffect(() => {
     prefetchStarted.current = false
-    streamFrame.current = 0
-    setReady(!url)
-    setVisible(false)
   }, [room.asset.assetId, room.asset.version, url])
 
+  const patchRuntime = (patch: Partial<RoomRuntimeState>) => {
+    const current = runtimeRef.current
+    const next = { ...current, ...patch }
+    if (
+      next.fileReady === current.fileReady
+      && next.fileVisible === current.fileVisible
+      && next.proceduralDetailed === current.proceduralDetailed
+    ) return
+    runtimeRef.current = next
+    setRuntime(next)
+  }
+
   useFrame(() => {
+    frame.current += 1
+
+    if (room.asset.kind === 'procedural') {
+      if (!started) {
+        behindProbes.current = 0
+        if (runtimeRef.current.proceduralDetailed) patchRuntime({ proceduralDetailed: false })
+        return
+      }
+
+      if (frame.current % 12 !== 0) return
+
+      const state = useAppStore.getState()
+      if (state.activeRoomId === room.id) {
+        behindProbes.current = 0
+        if (!runtimeRef.current.proceduralDetailed) patchRuntime({ proceduralDetailed: true })
+        return
+      }
+
+      const dx = state.player.x - room.position[0]
+      const dz = state.player.z - room.position[2]
+      const distanceSq = dx * dx + dz * dz
+      const forceRadiusSq = lod.forceDetailRadius * lod.forceDetailRadius
+      const wakeRadiusSq = lod.proceduralWakeRadius * lod.proceduralWakeRadius
+      const sleepRadiusSq = lod.proceduralSleepRadius * lod.proceduralSleepRadius
+
+      toRoom.current.set(room.position[0] - camera.position.x, 0, room.position[2] - camera.position.z)
+      const toRoomLengthSq = toRoom.current.lengthSq()
+      const viewDot = toRoomLengthSq > 0.0001
+        ? camera.getWorldDirection(forward.current).setY(0).normalize().dot(toRoom.current.normalize())
+        : 1
+
+      if (!runtimeRef.current.proceduralDetailed) {
+        if (
+          distanceSq <= forceRadiusSq
+          || (distanceSq <= wakeRadiusSq && viewDot >= lod.viewWakeDot)
+        ) {
+          behindProbes.current = 0
+          patchRuntime({ proceduralDetailed: true })
+        }
+        return
+      }
+
+      if (distanceSq >= sleepRadiusSq) {
+        behindProbes.current = 0
+        patchRuntime({ proceduralDetailed: false })
+        return
+      }
+
+      if (distanceSq > forceRadiusSq && viewDot <= lod.viewSleepDot) {
+        behindProbes.current += 1
+        if (behindProbes.current >= PROCEDURAL_BEHIND_PROBES) {
+          behindProbes.current = 0
+          patchRuntime({ proceduralDetailed: false })
+        }
+        return
+      }
+
+      behindProbes.current = 0
+      return
+    }
+
     if (!url) return
 
     if (!started) {
-      if (visible) setVisible(false)
+      if (runtimeRef.current.fileVisible) patchRuntime({ fileVisible: false })
       return
     }
 
-    streamFrame.current = (streamFrame.current + 1) % 10
-    if (streamFrame.current !== 0) return
+    if (frame.current % 10 !== 0) return
 
     const state = useAppStore.getState()
     const dx = state.player.x - room.position[0]
@@ -151,8 +163,7 @@ function useProgressiveFileAsset(room: RoomDefinition) {
 
     if (state.activeRoomId === room.id) {
       preload()
-      if (!ready) setReady(true)
-      if (!visible) setVisible(true)
+      patchRuntime({ fileReady: true, fileVisible: true })
       return
     }
 
@@ -160,17 +171,16 @@ function useProgressiveFileAsset(room: RoomDefinition) {
 
     if (distanceSq <= revealRadiusSq) {
       preload()
-      if (!ready) setReady(true)
-      if (!visible) setVisible(true)
+      patchRuntime({ fileReady: true, fileVisible: true })
       return
     }
 
-    if (visible && distanceSq >= sleepRadiusSq) {
-      setVisible(false)
+    if (runtimeRef.current.fileVisible && distanceSq >= sleepRadiusSq) {
+      patchRuntime({ fileVisible: false })
     }
   })
 
-  return { ready, visible }
+  return runtime
 }
 
 function UnsupportedRoom({ room }: { room: RoomDefinition }) {
@@ -194,29 +204,25 @@ function UnsupportedRoom({ room }: { room: RoomDefinition }) {
 function RoomRendererInner({
   room,
   vendor,
-  fileReady,
-  fileVisible,
-  proceduralDetailed
+  runtime
 }: {
   room: RoomDefinition
   vendor?: Vendor
-  fileReady: boolean
-  fileVisible: boolean
-  proceduralDetailed: boolean
+  runtime: RoomRuntimeState
 }) {
   if (room.asset.kind === 'procedural') {
-    return proceduralDetailed
+    return runtime.proceduralDetailed
       ? <Booth room={room} vendor={vendor} />
       : <ProceduralRoomProxy room={room} vendor={vendor} />
   }
 
   if (room.asset.kind === 'gltf') {
-    if (!fileReady || !fileVisible) return <ProceduralRoomProxy room={room} vendor={vendor} />
+    if (!runtime.fileReady || !runtime.fileVisible) return <ProceduralRoomProxy room={room} vendor={vendor} />
     return <FileRoomRenderer room={room} vendor={vendor} url={room.asset.url} scale={room.asset.scale} />
   }
 
   if (room.asset.kind === 'scan' && room.asset.format === 'gltf') {
-    if (!fileReady || !fileVisible) return <ProceduralRoomProxy room={room} vendor={vendor} />
+    if (!runtime.fileReady || !runtime.fileVisible) return <ProceduralRoomProxy room={room} vendor={vendor} />
     return <FileRoomRenderer room={room} vendor={vendor} url={room.asset.url} scale={room.asset.scale} />
   }
 
@@ -225,12 +231,11 @@ function RoomRendererInner({
 
 export default function RoomRenderer({ room, vendor }: { room: RoomDefinition; vendor?: Vendor }) {
   const clearAssetError = useAppStore((state) => state.clearAssetError)
-  const fileState = useProgressiveFileAsset(room)
-  const proceduralDetailed = useProceduralDetail(room)
+  const runtime = useRoomRuntime(room)
 
   const runtimeMode: RoomRuntimeMode = room.asset.kind === 'procedural'
-    ? proceduralDetailed ? 'procedural-detail' : 'proxy'
-    : fileState.ready && fileState.visible
+    ? runtime.proceduralDetailed ? 'procedural-detail' : 'proxy'
+    : runtime.fileReady && runtime.fileVisible
       ? 'file-detail'
       : 'proxy'
 
@@ -246,13 +251,7 @@ export default function RoomRenderer({ room, vendor }: { room: RoomDefinition; v
   return (
     <RoomAssetBoundary key={`${room.id}:${room.asset.version}`} room={room}>
       <Suspense fallback={<ProceduralRoomProxy room={room} vendor={vendor} />}>
-        <RoomRendererInner
-          room={room}
-          vendor={vendor}
-          fileReady={fileState.ready}
-          fileVisible={fileState.visible}
-          proceduralDetailed={proceduralDetailed}
-        />
+        <RoomRendererInner room={room} vendor={vendor} runtime={runtime} />
       </Suspense>
     </RoomAssetBoundary>
   )
