@@ -9,7 +9,8 @@ import {
   consumeMobileZoom,
   getMobileInteractSequence,
   getMobileMove,
-  resetMobileInput
+  resetMobileInput,
+  subscribeMobileInput
 } from '../input/mobileInput'
 import { useAppStore } from '../store'
 import { findActiveRoom } from '../world/spatial'
@@ -32,8 +33,9 @@ function touchDistance(a: Touch, b: Touch) {
 }
 
 export default function PlayerController({ world }: { world: WorldDefinition }) {
-  const { camera, gl, scene } = useThree()
+  const { camera, gl, scene, invalidate } = useThree()
   const started = useAppStore((state) => state.started)
+  const quality = useAppStore((state) => state.quality)
   const navigationRequest = useAppStore((state) => state.navigationRequest)
   const clearNavigationRequest = useAppStore((state) => state.clearNavigationRequest)
   const setSelected = useAppStore((state) => state.setSelected)
@@ -63,7 +65,21 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
   const velocity = useRef(new Vector3())
   const stepVector = useRef(new Vector3())
   const bobPhase = useRef(0)
+  const renderTimer = useRef<number | null>(null)
+  const lastRenderedAt = useRef(0)
   const collisions = useMemo(() => buildWorldColliders(world), [world])
+
+  const requestBudgetedFrame = useCallback(() => {
+    const targetMs = quality === 'cinematic' ? 1000 / 60 : 1000 / 45
+    const now = window.performance.now()
+    const wait = Math.max(0, targetMs - (now - lastRenderedAt.current))
+    if (renderTimer.current !== null) return
+
+    renderTimer.current = window.setTimeout(() => {
+      renderTimer.current = null
+      invalidate()
+    }, wait)
+  }, [invalidate, quality])
 
   const clearNearby = useCallback(() => {
     if (!lastNearby.current) return
@@ -104,7 +120,8 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
     bobPhase.current = 0
     setPlayer(target[0], target[2])
     lastReportedPlayer.current.set(target[0], target[2])
-  }, [camera, setPlayer])
+    requestBudgetedFrame()
+  }, [camera, requestBudgetedFrame, setPlayer])
 
   useEffect(() => {
     touchMode.current = (window.matchMedia?.('(pointer: coarse)').matches ?? false) || navigator.maxTouchPoints > 0
@@ -133,6 +150,7 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
       yaw.current -= event.movementX * 0.0022
       pitch.current -= event.movementY * 0.002
       pitch.current = Math.max(-1.25, Math.min(1.25, pitch.current))
+      requestBudgetedFrame()
     }
 
     const onWheel = (event: WheelEvent) => {
@@ -140,6 +158,7 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
       event.preventDefault()
       const delta = Math.max(-120, Math.min(120, event.deltaY))
       baseFovTarget.current = clampFov(baseFovTarget.current + delta * 0.045)
+      requestBudgetedFrame()
     }
 
     const onTouchStart = (event: TouchEvent) => {
@@ -170,6 +189,7 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
 
     const onKeyDown = (event: KeyboardEvent) => {
       keys.current.add(event.code)
+      requestBudgetedFrame()
 
       if (event.code === 'KeyE' && !event.repeat && document.pointerLockElement === canvas) activateTarget()
       if (event.code === 'KeyF' && !event.repeat && document.pointerLockElement === canvas) quickTargetAction('sample')
@@ -182,7 +202,10 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
       if (event.code === 'Digit0' && !event.repeat) baseFovTarget.current = DEFAULT_FOV
     }
 
-    const onKeyUp = (event: KeyboardEvent) => keys.current.delete(event.code)
+    const onKeyUp = (event: KeyboardEvent) => {
+      keys.current.delete(event.code)
+      requestBudgetedFrame()
+    }
 
     const onPointerLockChange = () => {
       clearKeys()
@@ -208,6 +231,8 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
     const onContextMenu = (event: MouseEvent) => {
       if (document.pointerLockElement === canvas) event.preventDefault()
     }
+
+    const unsubscribeMobileInput = subscribeMobileInput(requestBudgetedFrame)
 
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('pointerlockchange', onPointerLockChange)
@@ -239,9 +264,14 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
       canvas.removeEventListener('touchcancel', onTouchEnd)
       canvas.removeEventListener('gesturestart', preventGesture)
       canvas.removeEventListener('gesturechange', preventGesture)
+      unsubscribeMobileInput()
+      if (renderTimer.current !== null) {
+        window.clearTimeout(renderTimer.current)
+        renderTimer.current = null
+      }
       resetMobileInput()
     }
-  }, [activateTarget, clearNearby, gl.domElement, quickTargetAction, started, world.spawn])
+  }, [activateTarget, clearNearby, gl.domElement, quickTargetAction, requestBudgetedFrame, started, world.spawn])
 
   const blocked = useCallback(
     (x: number, z: number) => isPositionBlocked(world, collisions, x, z, PLAYER_RADIUS),
@@ -249,6 +279,7 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
   )
 
   useFrame(({ clock }, delta) => {
+    lastRenderedAt.current = window.performance.now()
     const mobileZoom = consumeMobileZoom()
     if (mobileZoom) baseFovTarget.current = clampFov(baseFovTarget.current + mobileZoom)
 
@@ -384,6 +415,12 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
         setActiveRoom(activeId)
       }
     }
+
+    const fovSettling = camera instanceof PerspectiveCamera
+      ? Math.abs(clampFov(baseFovTarget.current + (sprinting && horizontalSpeed > 2 ? 3.5 : 0)) - camera.fov) > 0.02
+      : false
+    const stillMoving = horizontalSpeed > 0.025 || desiredVelocity.current.lengthSq() > 0.0004
+    if (stillMoving || fovSettling || mobileMoving) requestBudgetedFrame()
   })
 
   return null
