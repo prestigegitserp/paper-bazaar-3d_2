@@ -1,8 +1,8 @@
 # Paper Bazaar 3D
 
-نسخه فعلی: **v0.16.0**
+نسخه فعلی: **v0.17.0**
 
-یک prototype سه‌بعدی ماژولار برای بازار کاغذ ایران با React، TypeScript، Three.js و React Three Fiber. v0.15 مستقیماً روی snapshot پایدار v0.14 ساخته شده است: runtime سبک‌تر، hero shop authored v4 و تعامل‌هایی که بدون شکستن flow حرکت اجازه‌ی نمونه‌برداری، استعلام چندفروشنده و مقایسه می‌دهند. قراردادهای World/Catalog/Documents/Scan و تمام releaseهای قبلی حفظ شده‌اند.
+یک prototype سه‌بعدی ماژولار برای بازار کاغذ ایران با React، TypeScript، Three.js و React Three Fiber. v0.17 روی snapshot پایدار v0.16 ساخته شده و تمرکزش جراحی ریشه‌ای performance بدون شکستن معماری scan-ready و production-art نسخه قبل است.
 
 ## اجرا
 
@@ -29,6 +29,48 @@ npm run dev
 | Mobile look | drag در نیمه راست |
 | Mobile interact | E |
 | Mobile zoom | pinch یا +/- |
+
+## v0.17 — Root Performance + Baked Realism
+
+v0.17 مستقیماً از `release/v0.16.0` منشعب شده است و تمام snapshotهای قبلی immutable مانده‌اند. قبل از شروع این branch هیچ v0.17 قبلی در repository وجود نداشت.
+
+### Root performance surgery
+- کل Canvas بعد از ورود هم `frameloop="demand"` است؛ دیگر refresh-rate نمایشگر به‌تنهایی باعث render دائمی نمی‌شود.
+- PlayerController با frame budget صریح کار می‌کند: هدف 60Hz در Cinematic و 45Hz در Balanced، فقط هنگام حرکت/نگاه/FOV.
+- DPR بازه‌ی محافظه‌کارانه‌تری دارد و AdaptiveDpr فقط یک‌بار mount می‌شود.
+- duplicate AdaptiveDpr و PCSS/SoftShadows حذف شده‌اند.
+- corridor از fan-out چراغ‌های Point/Spot realtime خالی شده و fixtureهای emissive ظاهر نور را حفظ می‌کنند.
+- shadow map اصلی از 1536 به 1024 کاهش یافته و فقط Cinematic shadow می‌سازد.
+- overlay شفاف سرتاسری FloorImperfections حذف شده تا fill-rate/overdraw کم شود.
+- transmission buffer شیشه‌های Hero نصف resolution رندر می‌شود.
+
+### CPU / interaction
+- interaction engine یک registry کوچک از targetهای واقعی دارد.
+- raycast اول فقط روی targetها انجام می‌شود؛ full-scene raycast فقط وقتی target پیدا شود و برای occlusion دقیق تا فاصله‌ی همان target اجرا می‌شود.
+- مسیر دوم R3F `onPointerOver/onClick` از meshهای سه‌بعدی حذف شده تا raycast دوبل نداشته باشیم.
+- دو callback مستقل residency هر Room به یک `useRoomRuntime` واحد تبدیل شده‌اند.
+- collision دایره‌ای از squared-distance استفاده می‌کند و `Math.hypot` از hot path حذف شده است.
+
+### Shader / texture budget
+- `SurfaceMaterial` از Physical-everywhere به Standard-first PBR تبدیل شده است.
+- clearcoat و anisotropy سنگین روی گچ/کاغذ/چوب/کف حذف شده‌اند.
+- MeshPhysicalMaterial فقط برای شیشه‌ی Hero در Cinematic باقی مانده است.
+- full PBR upgradeهای authored فقط وقتی performance تقریباً recover شده باشد اجرا می‌شوند؛ shared KTX2 atlas fallback همیشه آماده است.
+- PMREM و compileAsync قبل از شروع حرکت کاربر و در idle آماده می‌شوند تا ورود به Room باعث compile hitch نشود.
+
+### Realism without extra frame cost
+- Hero GLBها `COLOR_0` baked vertex lighting دارند؛ contact depth و جهت نور پایه داخل asset ذخیره می‌شود.
+- ظاهر بیش‌ازحد پلاستیکی با حذف clearcoat عمومی کاهش یافته است.
+- فقط یک spotlight بدون shadow برای Hero Room فعال و فقط در Cinematic/performance سالم نگه داشته می‌شود.
+- سه Hero Shop، KTX2 atlas، asset registry، semantic hotspotها و قابلیت جایگزینی آینده با scan از v0.16 حفظ شده‌اند.
+
+### Diagnostics
+F3 حالا علاوه بر FPS/frame time/draw calls موارد زیر را جدا نشان می‌دهد:
+- target scans/s
+- full-scene occlusion scans/s
+- تعداد interaction targetهای resident
+- pixel ratio واقعی
+- proxy/detail/file room budget
 
 ## v0.16 — Production Art + Portable Asset Runtime
 
