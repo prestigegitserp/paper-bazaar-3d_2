@@ -52,5 +52,10 @@ export function isPositionBlocked(world: WorldDefinition, collisions: WorldColli
     return true
   }
 
-  return collisions.circles.some((collider) => Math.hypot(x - collider.x, z - collider.z) < collider.radius + radius)
+  return collisions.circles.some((collider) => {
+    const dx = x - collider.x
+    const dz = z - collider.z
+    const combined = collider.radius + radius
+    return dx * dx + dz * dz < combined * combined
+  })
 }
