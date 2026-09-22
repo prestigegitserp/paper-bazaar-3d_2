@@ -95,9 +95,10 @@ test('production shadow policy keeps small props out of the shadow budget', asyn
 
 test('v0.16 production-art contracts remain available in later releases', async () => {
   const packageJson = JSON.parse(await source('../package.json'))
-  const hud = await source('../src/components/HUD.tsx')
+  const loader = await source('../src/scene/materials/productionAtlas.ts')
   const [major, minor] = packageJson.version.split('.').map(Number)
   assert.equal(major, 0)
   assert.ok(minor >= 16)
-  assert.match(hud, /KTX2 material atlas/)
+  assert.match(loader, /KTX2Loader/)
+  assert.match(loader, /market-material-atlas\.ktx2/)
 })
