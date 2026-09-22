@@ -62,6 +62,7 @@ export default function App() {
           gl.toneMapping = AgXToneMapping
           gl.toneMappingExposure = 1.0
           gl.outputColorSpace = SRGBColorSpace
+          gl.transmissionResolutionScale = 0.5
         }}
       >
         <Suspense fallback={null}>
