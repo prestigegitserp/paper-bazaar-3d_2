@@ -36,6 +36,9 @@ export type Diagnostics = {
   fps: number
   frameMs: number
   raycastsPerSecond: number
+  occlusionRaycastsPerSecond: number
+  interactionTargets: number
+  pixelRatio: number
   proxyRooms: number
   detailedRooms: number
   fileRooms: number
@@ -155,6 +158,9 @@ export const useAppStore = create<AppState>((set) => ({
     fps: 0,
     frameMs: 0,
     raycastsPerSecond: 0,
+    occlusionRaycastsPerSecond: 0,
+    interactionTargets: 0,
+    pixelRatio: 1,
     proxyRooms: 0,
     detailedRooms: 0,
     fileRooms: 0
