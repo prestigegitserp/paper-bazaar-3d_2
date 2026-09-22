@@ -1,4 +1,3 @@
-import type { ThreeEvent } from '@react-three/fiber'
 import { useEffect, useRef, type ReactNode } from 'react'
 import type { Interaction } from '../../domain/interaction'
 import { interactionKey } from '../../engine/interactions'
@@ -22,8 +21,6 @@ export default function InteractiveNode({
   position?: [number, number, number]
 }) {
   const groupRef = useRef<import('three').Group>(null)
-  const setSelected = useAppStore((state) => state.setSelected)
-  const setNearby = useAppStore((state) => state.setNearby)
   const key = interactionKey(interaction)
   const active = useAppStore((state) => Boolean(interaction && interactionKey(state.nearby) === key))
 
@@ -33,25 +30,11 @@ export default function InteractiveNode({
     return registerInteractionTarget(group)
   }, [interaction])
 
-  const onClick = (event: ThreeEvent<MouseEvent>) => {
-    event.stopPropagation()
-    if (!interaction || document.pointerLockElement) return
-    setSelected(interaction)
-  }
-
   return (
     <group
       ref={groupRef}
       position={position}
       userData={interaction ? { interaction } : undefined}
-      onClick={onClick}
-      onPointerOver={(event) => {
-        event.stopPropagation()
-        if (interaction && !document.pointerLockElement) setNearby(interaction)
-      }}
-      onPointerOut={() => {
-        if (!document.pointerLockElement) setNearby(null)
-      }}
     >
       {children}
       <InteractionHalo active={active} color={accent} position={haloPosition} radius={haloRadius} />
