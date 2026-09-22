@@ -3,6 +3,7 @@ import { Euler, PerspectiveCamera, Quaternion, Raycaster, Vector2, Vector3 } fro
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { buildWorldColliders, isPositionBlocked } from '../engine/collision'
 import { interactionFromObject, interactionKey } from '../engine/interactions'
+import { getInteractionTargets } from '../engine/interactionTargets'
 import { noteInteractionRaycast } from '../engine/runtimeMetrics'
 import {
   consumeMobileLook,
@@ -89,12 +90,25 @@ export default function PlayerController({ world }: { world: WorldDefinition }) 
 
   const findTarget = useCallback(() => {
     noteInteractionRaycast()
+    const targets = getInteractionTargets()
+    if (!targets.length) return null
+
     RAYCASTER.near = 0
     RAYCASTER.far = INTERACTION_DISTANCE
     RAYCASTER.setFromCamera(CENTER, camera)
-    const firstHit = RAYCASTER.intersectObjects(scene.children, true)[0]
-    if (!firstHit || firstHit.distance > INTERACTION_DISTANCE) return null
-    return interactionFromObject(firstHit.object)
+
+    const targetHit = RAYCASTER.intersectObjects(targets, true)[0]
+    if (!targetHit || targetHit.distance > INTERACTION_DISTANCE) return null
+
+    const interaction = interactionFromObject(targetHit.object)
+    if (!interaction) return null
+
+    RAYCASTER.far = Math.max(0, targetHit.distance - 0.012)
+    const blocker = RAYCASTER.intersectObjects(scene.children, true)[0]
+    RAYCASTER.far = INTERACTION_DISTANCE
+    if (blocker) return null
+
+    return interaction
   }, [camera, scene])
 
   const activateTarget = useCallback(() => {
