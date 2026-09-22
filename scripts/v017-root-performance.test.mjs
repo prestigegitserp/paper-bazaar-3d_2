@@ -114,3 +114,13 @@ test('v0.17 F3 diagnostics separate broadphase from expensive occlusion work', a
   assert.match(hud, /interaction targets/)
   assert.match(hud, /pixel ratio/)
 })
+
+
+test('v0.17 release metadata identifies the root-performance milestone', async () => {
+  const packageJson = JSON.parse(await source('../package.json'))
+  const hud = await source('../src/components/HUD.tsx')
+  const readme = await source('../README.md')
+  assert.equal(packageJson.version, '0.17.0')
+  assert.match(hud, /ROOT PERFORMANCE \+ BAKED REALISM · v0\.17\.0/)
+  assert.match(readme, /نسخه فعلی: \*\*v0\.17\.0\*\*/)
+})
