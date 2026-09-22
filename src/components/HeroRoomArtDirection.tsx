@@ -2,6 +2,7 @@ import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
 import { PlaneGeometry, Texture } from 'three'
 import { getAssetPresentationProfile } from '../presentation/assetPresentationRegistry'
+import { useAppStore } from '../store'
 import type { RoomDefinition } from '../world/types'
 
 const geometryCache = new Map<number, PlaneGeometry>()
@@ -29,6 +30,9 @@ function tileGeometry(tile: number) {
 export default function HeroRoomArtDirection({ room }: { room: RoomDefinition }) {
   const gl = useThree((state) => state.gl)
   const invalidate = useThree((state) => state.invalidate)
+  const performanceCurrent = useThree((state) => state.performance.current)
+  const activeRoomId = useAppStore((state) => state.activeRoomId)
+  const quality = useAppStore((state) => state.quality)
   const [atlas, setAtlas] = useState<Texture | null>(null)
   const profile = useMemo(() => getAssetPresentationProfile(room), [room])
   const hero = profile.hero
@@ -55,36 +59,19 @@ export default function HeroRoomArtDirection({ room }: { room: RoomDefinition })
 
   return (
     <group>
-      <spotLight
-        position={hero.lighting.key.position}
-        target-position={[0.7, 1.0, -0.65]}
-        color={hero.lighting.key.color}
-        intensity={hero.lighting.key.intensity}
-        distance={7}
-        angle={hero.lighting.key.angle}
-        penumbra={0.9}
-        decay={2}
-        castShadow={false}
-      />
-      <pointLight
-        position={hero.lighting.fill.position}
-        color={hero.lighting.fill.color}
-        intensity={hero.lighting.fill.intensity}
-        distance={hero.lighting.fill.distance}
-        decay={2}
-        castShadow={false}
-      />
-      <spotLight
-        position={hero.lighting.rim.position}
-        target-position={[0.4, 1.35, 1.0]}
-        color={hero.lighting.rim.color}
-        intensity={hero.lighting.rim.intensity}
-        distance={6}
-        angle={hero.lighting.rim.angle}
-        penumbra={0.95}
-        decay={2}
-        castShadow={false}
-      />
+      {activeRoomId === room.id && quality === 'cinematic' && performanceCurrent > 0.86 && (
+        <spotLight
+          position={hero.lighting.key.position}
+          target-position={[0.7, 1.0, -0.65]}
+          color={hero.lighting.key.color}
+          intensity={hero.lighting.key.intensity * 0.82}
+          distance={6.5}
+          angle={hero.lighting.key.angle}
+          penumbra={0.94}
+          decay={2}
+          castShadow={false}
+        />
+      )}
 
       {hero.atlasDressing.map((item, index) => (
         <mesh
