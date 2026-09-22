@@ -12,7 +12,7 @@ test('motion temporarily trades pixels, never scene fidelity', async () => {
   const controller = await source('../src/components/MotionPerformanceController.tsx')
 
   assert.match(app, /performance=\{\{/)
-  assert.match(app, /debounce: 650/)
+  assert.match(app, /debounce: 850/)
   assert.match(mall, /AdaptiveDpr/)
   assert.doesNotMatch(mall, /AdaptiveEvents/)
   assert.match(controller, /state\.performance\.regress/)
@@ -37,8 +37,8 @@ test('PMREM creation is decoupled from quality toggles', async () => {
   assert.match(environment, /requestIdleCallback/)
   assert.match(environment, /new PMREMGenerator/)
   assert.match(environment, /scene\.environmentIntensity = quality === 'cinematic'/)
-  assert.match(environment, /\}, \[gl, invalidate, scene, started\]\)/)
-  assert.match(environment, /\}, \[invalidate, quality, scene, started\]\)/)
+  assert.match(environment, /\}, \[gl, invalidate, scene\]\)/)
+  assert.match(environment, /\}, \[invalidate, quality, scene\]\)/)
 })
 
 test('micro roughness fills the albedo-only realism gap without network assets', async () => {
